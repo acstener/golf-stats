@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as holes from "../holes.js";
+import type * as migration from "../migration.js";
 import type * as rounds from "../rounds.js";
 import type * as stats from "../stats.js";
 
@@ -27,6 +28,7 @@ import type * as stats from "../stats.js";
  */
 declare const fullApi: ApiFromModules<{
   holes: typeof holes;
+  migration: typeof migration;
   rounds: typeof rounds;
   stats: typeof stats;
 }>;

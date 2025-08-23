@@ -22,7 +22,9 @@ import {
   Flag,
   AlertTriangle,
   MapPin,
-  TrendingDown
+  TrendingDown,
+  Shield,
+  Save
 } from "lucide-react";
 
 export default function HoleTrackerPage() {
@@ -40,7 +42,8 @@ export default function HoleTrackerPage() {
   const [failedEasyUpDown, setFailedEasyUpDown] = useState({ occurred: false, reason: "" });
   const [threePutt, setThreePutt] = useState({ occurred: false, firstPuttDistance: 0 });
   const [penalty, setPenalty] = useState({ occurred: false, type: "", reason: "" });
-  const [wedgeRange, setWedgeRange] = useState({ wasInWedgeRange: false, shotsFromWedgeRange: 3 });
+  const [wedgeRange, setWedgeRange] = useState({ wasInWedgeRange: false, shotsFromWedgeRange: 3, reason: "" });
+  const [heroShotsAvoided, setHeroShotsAvoided] = useState({ occurred: false, description: "" });
 
   const round = useQuery(api.rounds.getRound, { roundId });
   const existingHole = useQuery(api.holes.getHole, { roundId, holeNumber: holeNum });
@@ -84,13 +87,21 @@ export default function HoleTrackerPage() {
       if (existingHole.wedgeRange) {
         setWedgeRange({
           wasInWedgeRange: existingHole.wedgeRange.wasInWedgeRange || false,
-          shotsFromWedgeRange: existingHole.wedgeRange.shotsFromWedgeRange || 3
+          shotsFromWedgeRange: existingHole.wedgeRange.shotsFromWedgeRange || 3,
+          reason: existingHole.wedgeRange.reason || ""
+        });
+      }
+      
+      if (existingHole.heroShotsAvoided) {
+        setHeroShotsAvoided({
+          occurred: existingHole.heroShotsAvoided.occurred || false,
+          description: existingHole.heroShotsAvoided.description || ""
         });
       }
     }
   }, [existingHole]);
 
-  const handleSaveAndNext = async () => {
+  const handleSaveHole = async () => {
     setIsSaving(true);
     try {
       await saveHole({
@@ -103,16 +114,32 @@ export default function HoleTrackerPage() {
         threePutt: threePutt.occurred ? threePutt : undefined,
         penalty: penalty.occurred ? penalty : undefined,
         wedgeRange: wedgeRange.wasInWedgeRange ? wedgeRange : undefined,
+        heroShotsAvoided: heroShotsAvoided.occurred ? heroShotsAvoided : undefined,
       });
+      return true;
+    } catch (error) {
+      console.error("Failed to save hole:", error);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
+  const handleSaveAndNext = async () => {
+    const saved = await handleSaveHole();
+    if (saved) {
       if (holeNum === 18) {
         router.push(`/round/${roundId}/summary`);
       } else {
         router.push(`/round/${roundId}/hole/${holeNum + 1}`);
       }
-    } catch (error) {
-      console.error("Failed to save hole:", error);
-      setIsSaving(false);
+    }
+  };
+
+  const handleSaveAndExit = async () => {
+    const saved = await handleSaveHole();
+    if (saved) {
+      router.push("/");
     }
   };
 
@@ -132,26 +159,26 @@ export default function HoleTrackerPage() {
     .reduce((acc, h) => acc + (h.strokes - h.par), 0) || 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header with progress */}
       <header className="sticky top-0 z-10 bg-background border-b">
         <div className="container mx-auto p-4">
           <div className="flex items-center justify-between mb-2">
-            <Badge variant="outline" className="text-lg px-3 py-1">
+            <Badge variant="outline" className="text-lg px-4 py-2">
               Hole {holeNum} • Par {par}
             </Badge>
-            <Badge variant={runningScore > 0 ? "destructive" : runningScore < 0 ? "default" : "secondary"}>
+            <Badge variant={runningScore > 0 ? "destructive" : runningScore < 0 ? "default" : "secondary"} className="px-4 py-2">
               {runningScore > 0 ? "+" : ""}{runningScore}
             </Badge>
           </div>
-          <Progress value={(holeNum / 18) * 100} className="h-2" />
+          <Progress value={(holeNum / 18) * 100} className="h-3" />
         </div>
       </header>
 
-      <main className="container mx-auto p-4 max-w-lg space-y-4">
+      <main className="container mx-auto p-4 max-w-lg space-y-5">
         {/* Score Entry */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center justify-between">
               Score
               <div className="flex gap-2">
@@ -160,6 +187,7 @@ export default function HoleTrackerPage() {
                     key={p}
                     variant={par === p ? "default" : "outline"}
                     size="sm"
+                    className="h-10 px-4"
                     onClick={() => setPar(p)}
                   >
                     Par {p}
@@ -172,32 +200,32 @@ export default function HoleTrackerPage() {
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
-                size="icon"
+                size="lg"
                 onClick={() => setStrokes(Math.max(1, strokes - 1))}
-                className="h-12 w-12"
+                className="h-14 w-14"
               >
-                <Minus className="h-5 w-5" />
+                <Minus className="h-6 w-6" />
               </Button>
               
               <div className="flex-1 text-center">
-                <div className="text-4xl font-bold">{strokes}</div>
+                <div className="text-5xl font-bold">{strokes}</div>
                 {strokes !== par && (
-                  <div className={`text-sm ${scoreColor}`}>
+                  <div className={`text-base mt-1 ${scoreColor}`}>
                     {scoreDiff > 0 ? "+" : ""}{scoreDiff}
                   </div>
                 )}
                 {isDoubleBogeyOrWorse && (
-                  <Badge variant="destructive" className="mt-1">Double+</Badge>
+                  <Badge variant="destructive" className="mt-2">Double+</Badge>
                 )}
               </div>
 
               <Button
                 variant="outline"
-                size="icon"
+                size="lg"
                 onClick={() => setStrokes(strokes + 1)}
-                className="h-12 w-12"
+                className="h-14 w-14"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-6 w-6" />
               </Button>
             </div>
           </CardContent>
@@ -205,16 +233,44 @@ export default function HoleTrackerPage() {
 
         {/* Advanced Stats Tracking */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-4">
             <CardTitle className="text-lg">What Happened?</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             
-            {/* Out of Position */}
-            <div className="space-y-2 p-3 border rounded-lg">
+            {/* Hero Shots Avoided (Positive Stat) */}
+            <div className="space-y-3 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
               <div className="flex items-center justify-between">
-                <Label htmlFor="out-of-position" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
+                <Label htmlFor="hero-shots" className="flex items-center gap-2 text-base">
+                  <Shield className="h-5 w-5 text-green-600" />
+                  Hero Shot Avoided
+                </Label>
+                <Switch
+                  id="hero-shots"
+                  checked={heroShotsAvoided.occurred}
+                  onCheckedChange={(checked) => 
+                    setHeroShotsAvoided({ ...heroShotsAvoided, occurred: checked })
+                  }
+                  className="scale-125"
+                />
+              </div>
+              {heroShotsAvoided.occurred && (
+                <Input
+                  placeholder="What risky shot did you avoid?"
+                  value={heroShotsAvoided.description}
+                  onChange={(e) => 
+                    setHeroShotsAvoided({ ...heroShotsAvoided, description: e.target.value })
+                  }
+                  className="h-12"
+                />
+              )}
+            </div>
+
+            {/* Out of Position */}
+            <div className="space-y-3 p-4 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="out-of-position" className="flex items-center gap-2 text-base">
+                  <MapPin className="h-5 w-5" />
                   Out of Position Shot
                 </Label>
                 <Switch
@@ -223,6 +279,7 @@ export default function HoleTrackerPage() {
                   onCheckedChange={(checked) => 
                     setOutOfPosition({ ...outOfPosition, occurred: checked })
                   }
+                  className="scale-125"
                 />
               </div>
               {outOfPosition.occurred && (
@@ -232,7 +289,7 @@ export default function HoleTrackerPage() {
                     setOutOfPosition({ ...outOfPosition, reason: value })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-12">
                     <SelectValue placeholder="Why?" />
                   </SelectTrigger>
                   <SelectContent>
@@ -247,10 +304,10 @@ export default function HoleTrackerPage() {
             </div>
 
             {/* Failed Easy Up & Down */}
-            <div className="space-y-2 p-3 border rounded-lg">
+            <div className="space-y-3 p-4 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label htmlFor="easy-up-down" className="flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4" />
+                <Label htmlFor="easy-up-down" className="flex items-center gap-2 text-base">
+                  <TrendingDown className="h-5 w-5" />
                   Failed Easy Up & Down
                 </Label>
                 <Switch
@@ -259,6 +316,7 @@ export default function HoleTrackerPage() {
                   onCheckedChange={(checked) => 
                     setFailedEasyUpDown({ ...failedEasyUpDown, occurred: checked })
                   }
+                  className="scale-125"
                 />
               </div>
               {failedEasyUpDown.occurred && (
@@ -268,7 +326,7 @@ export default function HoleTrackerPage() {
                     setFailedEasyUpDown({ ...failedEasyUpDown, reason: value })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-12">
                     <SelectValue placeholder="Why?" />
                   </SelectTrigger>
                   <SelectContent>
@@ -283,10 +341,10 @@ export default function HoleTrackerPage() {
             </div>
 
             {/* Three Putt */}
-            <div className="space-y-2 p-3 border rounded-lg">
+            <div className="space-y-3 p-4 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label htmlFor="three-putt" className="flex items-center gap-2">
-                  <Flag className="h-4 w-4" />
+                <Label htmlFor="three-putt" className="flex items-center gap-2 text-base">
+                  <Flag className="h-5 w-5" />
                   Three Putt
                 </Label>
                 <Switch
@@ -295,17 +353,18 @@ export default function HoleTrackerPage() {
                   onCheckedChange={(checked) => 
                     setThreePutt({ ...threePutt, occurred: checked })
                   }
+                  className="scale-125"
                 />
               </div>
               {threePutt.occurred && (
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="putt-distance" className="text-sm">
-                    First putt distance (feet):
+                <div className="flex items-center gap-3">
+                  <Label htmlFor="putt-distance" className="text-sm whitespace-nowrap">
+                    First putt (ft):
                   </Label>
                   <Input
                     id="putt-distance"
                     type="number"
-                    className="w-20"
+                    className="w-24 h-12"
                     value={threePutt.firstPuttDistance}
                     onChange={(e) => 
                       setThreePutt({ ...threePutt, firstPuttDistance: parseInt(e.target.value) || 0 })
@@ -316,10 +375,10 @@ export default function HoleTrackerPage() {
             </div>
 
             {/* Penalty */}
-            <div className="space-y-2 p-3 border rounded-lg">
+            <div className="space-y-3 p-4 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label htmlFor="penalty" className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
+                <Label htmlFor="penalty" className="flex items-center gap-2 text-base">
+                  <AlertTriangle className="h-5 w-5" />
                   Penalty
                 </Label>
                 <Switch
@@ -328,17 +387,18 @@ export default function HoleTrackerPage() {
                   onCheckedChange={(checked) => 
                     setPenalty({ ...penalty, occurred: checked })
                   }
+                  className="scale-125"
                 />
               </div>
               {penalty.occurred && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Select
                     value={penalty.type}
                     onValueChange={(value) => 
                       setPenalty({ ...penalty, type: value })
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full h-12">
                       <SelectValue placeholder="Penalty type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -354,7 +414,7 @@ export default function HoleTrackerPage() {
                       setPenalty({ ...penalty, reason: value })
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full h-12">
                       <SelectValue placeholder="Why?" />
                     </SelectTrigger>
                     <SelectContent>
@@ -370,10 +430,10 @@ export default function HoleTrackerPage() {
             </div>
 
             {/* Wedge Range Performance */}
-            <div className="space-y-2 p-3 border rounded-lg">
+            <div className="space-y-3 p-4 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label htmlFor="wedge-range" className="flex items-center gap-2">
-                  <Target className="h-4 w-4" />
+                <Label htmlFor="wedge-range" className="flex items-center gap-2 text-base">
+                  <Target className="h-5 w-5" />
                   Inside Wedge Range (≤120 yards)
                 </Label>
                 <Switch
@@ -382,40 +442,65 @@ export default function HoleTrackerPage() {
                   onCheckedChange={(checked) => 
                     setWedgeRange({ ...wedgeRange, wasInWedgeRange: checked })
                   }
+                  className="scale-125"
                 />
               </div>
               {wedgeRange.wasInWedgeRange && (
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="wedge-shots" className="text-sm">
-                    Shots to hole out:
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => 
-                        setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: Math.max(1, wedgeRange.shotsFromWedgeRange - 1) })
-                      }
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">
-                      {wedgeRange.shotsFromWedgeRange}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => 
-                        setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: wedgeRange.shotsFromWedgeRange + 1 })
-                      }
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="wedge-shots" className="text-sm whitespace-nowrap">
+                      Shots to hole:
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10 w-10"
+                        onClick={() => 
+                          setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: Math.max(1, wedgeRange.shotsFromWedgeRange - 1) })
+                        }
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-10 text-center font-medium text-lg">
+                        {wedgeRange.shotsFromWedgeRange}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-10 w-10"
+                        onClick={() => 
+                          setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: wedgeRange.shotsFromWedgeRange + 1 })
+                        }
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {wedgeRange.shotsFromWedgeRange > 3 && (
+                      <Badge variant="secondary">
+                        {wedgeRange.shotsFromWedgeRange - 3} over par 3
+                      </Badge>
+                    )}
                   </div>
+                  
+                  {/* Show reason dropdown only if shots > 3 */}
                   {wedgeRange.shotsFromWedgeRange > 3 && (
-                    <Badge variant="secondary" className="ml-2">
-                      {wedgeRange.shotsFromWedgeRange - 3} over par 3
-                    </Badge>
+                    <Select
+                      value={wedgeRange.reason}
+                      onValueChange={(value) => 
+                        setWedgeRange({ ...wedgeRange, reason: value })
+                      }
+                    >
+                      <SelectTrigger className="w-full h-12">
+                        <SelectValue placeholder="Why over par 3?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bad-approach">Bad approach</SelectItem>
+                        <SelectItem value="bad-lag-putt">Bad lag putt</SelectItem>
+                        <SelectItem value="bad-short-putt">Bad short putt</SelectItem>
+                        <SelectItem value="double-chip">Double chip</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               )}
@@ -425,24 +510,37 @@ export default function HoleTrackerPage() {
         </Card>
 
         {/* Navigation */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={holeNum === 1}
-            className="flex-1"
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Previous
-          </Button>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={holeNum === 1}
+              className="flex-1 h-12"
+            >
+              <ChevronLeft className="mr-2 h-5 w-5" />
+              Previous
+            </Button>
+            
+            <Button
+              onClick={handleSaveAndNext}
+              disabled={isSaving}
+              className="flex-1 h-12"
+            >
+              {isSaving ? "Saving..." : holeNum === 18 ? "Finish Round" : "Save & Next"}
+              {holeNum < 18 && <ChevronRight className="ml-2 h-5 w-5" />}
+            </Button>
+          </div>
           
+          {/* Save & Exit button */}
           <Button
-            onClick={handleSaveAndNext}
+            variant="secondary"
+            onClick={handleSaveAndExit}
             disabled={isSaving}
-            className="flex-1"
+            className="w-full h-12"
           >
-            {isSaving ? "Saving..." : holeNum === 18 ? "Finish Round" : "Save & Next"}
-            {holeNum < 18 && <ChevronRight className="ml-2 h-4 w-4" />}
+            <Save className="mr-2 h-5 w-5" />
+            Save & Exit to Dashboard
           </Button>
         </div>
 

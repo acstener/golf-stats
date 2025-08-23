@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, TrendingUp, Target } from "lucide-react";
+import { AlertCircle, TrendingUp, Target, PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 
@@ -57,11 +57,31 @@ function SignInForm() {
 
 function Dashboard() {
   const recentRounds = useQuery(api.rounds.getRecentRounds, { count: 5 });
+  const allRounds = useQuery(api.rounds.getRounds, { limit: 10 });
   const biggestProblem = useQuery(api.stats.getBiggestProblem);
   const userStats = useQuery(api.stats.getUserStats);
+  
+  // Find incomplete rounds
+  const incompleteRound = allRounds?.find(r => !r.isComplete);
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Resume Incomplete Round Alert */}
+      {incompleteRound && (
+        <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+          <PlayCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              <strong>Continue your round at {incompleteRound.courseName}</strong>
+            </span>
+            <Link href={`/round/${incompleteRound._id}/hole/1`}>
+              <Button variant="link" size="sm" className="text-blue-600">
+                Resume Round →
+              </Button>
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
       {/* Quick Stats */}
       <Card>
         <CardHeader>

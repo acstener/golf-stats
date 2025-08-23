@@ -53,6 +53,12 @@ const schema = defineSchema({
     wedgeRange: v.optional(v.object({
       wasInWedgeRange: v.boolean(), // Did you have ≤120 yards to pin?
       shotsFromWedgeRange: v.optional(v.number()), // Total shots from there to holed out
+      reason: v.optional(v.string()), // Why > 3 shots: "bad approach", "bad lag putt", "bad short putt", "double chip"
+    })),
+    
+    heroShotsAvoided: v.optional(v.object({
+      occurred: v.boolean(),
+      description: v.optional(v.string()), // What hero shot did you avoid?
     })),
     
     createdAt: v.number(),

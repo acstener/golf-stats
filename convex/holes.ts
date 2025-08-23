@@ -34,6 +34,12 @@ export const saveHole = mutation({
     wedgeRange: v.optional(v.object({
       wasInWedgeRange: v.boolean(),
       shotsFromWedgeRange: v.optional(v.number()),
+      reason: v.optional(v.string()),
+    })),
+    
+    heroShotsAvoided: v.optional(v.object({
+      occurred: v.boolean(),
+      description: v.optional(v.string()),
     })),
   },
   handler: async (ctx, args) => {
@@ -68,6 +74,7 @@ export const saveHole = mutation({
       threePutt: args.threePutt,
       penalty: args.penalty,
       wedgeRange: args.wedgeRange,
+      heroShotsAvoided: args.heroShotsAvoided,
     };
 
     if (existingHole) {
