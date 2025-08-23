@@ -4,10 +4,18 @@
 A mobile-first golf stat tracking app that helps golfers identify and fix their biggest on-course problems. Built with Next.js, Convex, Clerk, and shadcn/ui.
 
 ## 📱 Core Features
-1. **Quick Round Tracking** - Track 6 key stats per hole
+1. **Advanced Stat Tracking** - Track 6 sophisticated stats with context
 2. **Problem Identification** - Automatically identify your biggest issues
 3. **Historical Analysis** - View trends and patterns over time
 4. **Mobile-First** - Designed for use on the golf course
+
+## 🎯 The 6 Stats We Track
+1. **Out of Position Shots** - Track with reasons (commitment, club choice, etc)
+2. **Failed Easy Up & Downs** - User-defined difficulty with failure reasons  
+3. **Double Bogeys+** - Auto-calculated from score
+4. **Three Putts** - Track with first putt distance
+5. **Penalties** - Track type and reason (ego distance, poor aim, etc)
+6. **Wedge Range Performance** - Track shots from ≤120 yards like par 3
 
 ## 🏗 Tech Stack
 - **Frontend**: Next.js 15, React 19, TypeScript
@@ -137,34 +145,33 @@ convex/
 ### Phase 1: Core Setup ✅
 - [x] Next.js + Convex + Clerk setup
 - [x] shadcn/ui installation with Tailwind v4
-- [ ] Database schema in Convex
-- [ ] Authentication flow
+- [x] Database schema in Convex
+- [x] Authentication flow
 
-### Phase 2: Dashboard
-- [ ] Layout with navigation
-- [ ] QuickStats component (Card + Chart)
-- [ ] ProblemAlert component
-- [ ] StatsGrid component
-- [ ] Convex queries for user stats
+### Phase 2: Dashboard ✅
+- [x] Layout with navigation
+- [x] QuickStats component (Card + Badge)
+- [x] ProblemAlert component
+- [x] StatsGrid component
+- [x] Convex queries for user stats
 
-### Phase 3: Round Tracking
-- [ ] New round creation flow
-- [ ] Hole tracker interface
-- [ ] Stat toggle buttons (Toggle Group)
-- [ ] Score entry with +/- buttons
-- [ ] Progress indicator
-- [ ] Convex mutations for saving hole data
+### Phase 3: Round Tracking ✅
+- [x] New round creation flow
+- [x] Advanced hole tracker interface
+- [x] Stat switches with context (Select/Input)
+- [x] Score entry with +/- buttons
+- [x] Progress indicator
+- [x] Convex mutations for saving hole data
 
-### Phase 4: Round Summary
-- [ ] Summary screen after hole 18
-- [ ] Stats breakdown table
-- [ ] Save round functionality
-- [ ] Navigation back to dashboard
+### Phase 4: Round Summary ✅
+- [x] Summary screen after hole 18
+- [x] Stats breakdown table
+- [x] Save round functionality
+- [x] Navigation back to dashboard
 
-### Phase 5: History & Analytics
-- [ ] Round history list
-- [ ] Filtering and pagination
-- [ ] Individual round view (Sheet/Dialog)
+### Phase 5: History & Analytics ✅
+- [x] Round history list
+- [x] Individual round view
 - [ ] Export functionality
 - [ ] Trend charts
 
@@ -271,4 +278,4 @@ convex/
 ---
 
 **Last Updated**: Aug 23, 2025
-**Status**: Phase 1 Complete, Starting Phase 2
+**Status**: Core App Complete (Phases 1-5) with Advanced Stat Tracking
