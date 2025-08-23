@@ -128,7 +128,7 @@ function Dashboard() {
                     <div className="text-sm text-muted-foreground mb-1">
                       {statNames[key]}
                     </div>
-                    <Badge variant={severity as any} className="text-lg px-3 py-1">
+                    <Badge variant={severity as "destructive" | "secondary" | "outline"} className="text-lg px-3 py-1">
                       {value}
                     </Badge>
                   </div>
