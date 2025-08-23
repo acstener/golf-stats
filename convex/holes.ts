@@ -8,14 +8,33 @@ export const saveHole = mutation({
     holeNumber: v.number(),
     par: v.number(),
     strokes: v.number(),
-    stats: v.object({
-      threePutt: v.boolean(),
-      penalty: v.boolean(),
-      bunker: v.boolean(),
-      waterHazard: v.boolean(),
-      outOfBounds: v.boolean(),
-      duffedChip: v.boolean(),
-    }),
+    
+    // Optional detailed stats
+    outOfPosition: v.optional(v.object({
+      occurred: v.boolean(),
+      reason: v.optional(v.string()),
+    })),
+    
+    failedEasyUpDown: v.optional(v.object({
+      occurred: v.boolean(),
+      reason: v.optional(v.string()),
+    })),
+    
+    threePutt: v.optional(v.object({
+      occurred: v.boolean(),
+      firstPuttDistance: v.optional(v.number()),
+    })),
+    
+    penalty: v.optional(v.object({
+      occurred: v.boolean(),
+      type: v.optional(v.string()),
+      reason: v.optional(v.string()),
+    })),
+    
+    wedgeRange: v.optional(v.object({
+      wasInWedgeRange: v.boolean(),
+      shotsFromWedgeRange: v.optional(v.number()),
+    })),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -35,22 +54,32 @@ export const saveHole = mutation({
       )
       .first();
 
+    // Auto-calculate double bogey or worse
+    const doubleBogeyOrWorse = args.strokes >= args.par + 2 
+      ? { occurred: true, causedBy: undefined }
+      : { occurred: false, causedBy: undefined };
+
+    const holeData = {
+      par: args.par,
+      strokes: args.strokes,
+      outOfPosition: args.outOfPosition,
+      failedEasyUpDown: args.failedEasyUpDown,
+      doubleBogeyOrWorse,
+      threePutt: args.threePutt,
+      penalty: args.penalty,
+      wedgeRange: args.wedgeRange,
+    };
+
     if (existingHole) {
       // Update existing hole
-      await ctx.db.patch(existingHole._id, {
-        par: args.par,
-        strokes: args.strokes,
-        stats: args.stats,
-      });
+      await ctx.db.patch(existingHole._id, holeData);
       return existingHole._id;
     } else {
       // Create new hole
       const holeId = await ctx.db.insert("holes", {
         roundId: args.roundId,
         holeNumber: args.holeNumber,
-        par: args.par,
-        strokes: args.strokes,
-        stats: args.stats,
+        ...holeData,
         createdAt: Date.now(),
       });
       return holeId;

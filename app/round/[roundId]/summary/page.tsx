@@ -33,14 +33,18 @@ export default function RoundSummaryPage() {
   const totalPar = round.holes.reduce((sum, hole) => sum + hole.par, 0);
   const score = totalStrokes - totalPar;
 
-  // Calculate stats
+  // Calculate stats with new structure
   const stats = {
-    threePutts: round.holes.filter(h => h.stats.threePutt).length,
-    penalties: round.holes.filter(h => h.stats.penalty).length,
-    bunkers: round.holes.filter(h => h.stats.bunker).length,
-    waterHazards: round.holes.filter(h => h.stats.waterHazard).length,
-    outOfBounds: round.holes.filter(h => h.stats.outOfBounds).length,
-    duffedChips: round.holes.filter(h => h.stats.duffedChip).length,
+    outOfPosition: round.holes.filter(h => h.outOfPosition?.occurred).length,
+    failedEasyUpDown: round.holes.filter(h => h.failedEasyUpDown?.occurred).length,
+    doubleBogeyOrWorse: round.holes.filter(h => h.doubleBogeyOrWorse?.occurred).length,
+    threePutt: round.holes.filter(h => h.threePutt?.occurred).length,
+    penalty: round.holes.filter(h => h.penalty?.occurred).length,
+    wedgeRangeOverPar: round.holes.filter(h => 
+      h.wedgeRange?.wasInWedgeRange && 
+      h.wedgeRange.shotsFromWedgeRange && 
+      h.wedgeRange.shotsFromWedgeRange > 3
+    ).length,
   };
 
   // Find the biggest issue
@@ -91,12 +95,12 @@ export default function RoundSummaryPage() {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <strong>Today&apos;s Main Issue:</strong> {biggestIssue[1]} {
-                biggestIssue[0] === "threePutts" ? "Three-Putts" :
-                biggestIssue[0] === "penalties" ? "Penalties" :
-                biggestIssue[0] === "bunkers" ? "Bunker Shots" :
-                biggestIssue[0] === "waterHazards" ? "Water Hazards" :
-                biggestIssue[0] === "outOfBounds" ? "Out of Bounds" :
-                "Duffed Chips"
+                biggestIssue[0] === "outOfPosition" ? "Out of Position Shots" :
+                biggestIssue[0] === "failedEasyUpDown" ? "Failed Easy Up & Downs" :
+                biggestIssue[0] === "doubleBogeyOrWorse" ? "Double Bogeys or Worse" :
+                biggestIssue[0] === "threePutt" ? "Three-Putts" :
+                biggestIssue[0] === "penalty" ? "Penalties" :
+                "Poor Wedge Range Shots"
               }
             </AlertDescription>
           </Alert>
@@ -118,12 +122,12 @@ export default function RoundSummaryPage() {
                 <div className="space-y-2">
                   {Object.entries(stats).map(([key, value]) => {
                     const statNames: Record<string, string> = {
-                      threePutts: "Three-Putts",
-                      penalties: "Penalties",
-                      bunkers: "Bunkers",
-                      waterHazards: "Water Hazards",
-                      outOfBounds: "Out of Bounds",
-                      duffedChips: "Duffed Chips",
+                      outOfPosition: "Out of Position",
+                      failedEasyUpDown: "Failed Easy Up & Downs",
+                      doubleBogeyOrWorse: "Double Bogeys+",
+                      threePutt: "Three-Putts",
+                      penalty: "Penalties",
+                      wedgeRangeOverPar: "Poor Wedge Play",
                     };
                     
                     return (
@@ -143,9 +147,15 @@ export default function RoundSummaryPage() {
           <TabsContent value="holes" className="space-y-2">
             {round.holes.map((hole) => {
               const holeDiff = hole.strokes - hole.par;
-              const activeStats = Object.entries(hole.stats)
-                .filter(([, active]) => active)
-                .map(([stat]) => stat);
+              const activeStats = [];
+              if (hole.outOfPosition?.occurred) activeStats.push("Out of Position");
+              if (hole.failedEasyUpDown?.occurred) activeStats.push("Failed Up & Down");
+              if (hole.doubleBogeyOrWorse?.occurred) activeStats.push("Double+");
+              if (hole.threePutt?.occurred) activeStats.push("3-Putt");
+              if (hole.penalty?.occurred) activeStats.push("Penalty");
+              if (hole.wedgeRange?.wasInWedgeRange && hole.wedgeRange.shotsFromWedgeRange && hole.wedgeRange.shotsFromWedgeRange > 3) {
+                activeStats.push("Poor Wedge");
+              }
               
               return (
                 <Card key={hole.holeNumber} className="p-3">
@@ -156,17 +166,7 @@ export default function RoundSummaryPage() {
                       </div>
                       {activeStats.length > 0 && (
                         <div className="text-sm text-muted-foreground mt-1">
-                          {activeStats.map(stat => {
-                            const statNames: Record<string, string> = {
-                              threePutt: "3-Putt",
-                              penalty: "Penalty",
-                              bunker: "Bunker",
-                              waterHazard: "Water",
-                              outOfBounds: "OB",
-                              duffedChip: "Duffed",
-                            };
-                            return statNames[stat];
-                          }).join(", ")}
+                          {activeStats.join(", ")}
                         </div>
                       )}
                     </div>

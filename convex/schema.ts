@@ -22,14 +22,39 @@ const schema = defineSchema({
     holeNumber: v.number(),    // 1-18
     par: v.number(),           // 3, 4, or 5
     strokes: v.number(),
-    stats: v.object({
-      threePutt: v.boolean(),
-      penalty: v.boolean(),
-      bunker: v.boolean(),
-      waterHazard: v.boolean(),
-      outOfBounds: v.boolean(),
-      duffedChip: v.boolean(),
-    }),
+    
+    // Core stats to track
+    outOfPosition: v.optional(v.object({
+      occurred: v.boolean(),
+      reason: v.optional(v.string()), // "lack of commitment", "wrong club", "not warmed up", etc.
+    })),
+    
+    failedEasyUpDown: v.optional(v.object({
+      occurred: v.boolean(),
+      reason: v.optional(v.string()), // "poor aim", "wrong club", "lack of commitment", etc.
+    })),
+    
+    doubleBogeyOrWorse: v.optional(v.object({
+      occurred: v.boolean(),
+      causedBy: v.optional(v.string()), // "drive", "approach", "chip", "putt"
+    })),
+    
+    threePutt: v.optional(v.object({
+      occurred: v.boolean(),
+      firstPuttDistance: v.optional(v.number()), // in feet
+    })),
+    
+    penalty: v.optional(v.object({
+      occurred: v.boolean(),
+      type: v.optional(v.string()), // "water", "OB", "lost ball"
+      reason: v.optional(v.string()), // "wrong club", "ego distance", "poor aim", "uncommitted"
+    })),
+    
+    wedgeRange: v.optional(v.object({
+      wasInWedgeRange: v.boolean(), // Did you have ≤120 yards to pin?
+      shotsFromWedgeRange: v.optional(v.number()), // Total shots from there to holed out
+    })),
+    
     createdAt: v.number(),
   })
     .index("by_round", ["roundId"])

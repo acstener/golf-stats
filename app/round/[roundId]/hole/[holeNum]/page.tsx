@@ -9,37 +9,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   ChevronLeft, 
   ChevronRight, 
   Minus, 
   Plus,
+  Target,
   Flag,
   AlertTriangle,
-  Waves,
-  Trees,
-  CircleX,
-  Shuffle
+  MapPin,
+  TrendingDown
 } from "lucide-react";
-
-const STAT_ICONS = {
-  threePutt: Flag,
-  penalty: AlertTriangle,
-  bunker: CircleX,
-  waterHazard: Waves,
-  outOfBounds: Trees,
-  duffedChip: Shuffle,
-};
-
-const STAT_LABELS = {
-  threePutt: "3-Putt",
-  penalty: "Penalty",
-  bunker: "Bunker",
-  waterHazard: "Water",
-  outOfBounds: "OB",
-  duffedChip: "Duffed",
-};
 
 export default function HoleTrackerPage() {
   const params = useParams();
@@ -49,8 +33,14 @@ export default function HoleTrackerPage() {
 
   const [par, setPar] = useState(4);
   const [strokes, setStrokes] = useState(4);
-  const [selectedStats, setSelectedStats] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Stat states
+  const [outOfPosition, setOutOfPosition] = useState({ occurred: false, reason: "" });
+  const [failedEasyUpDown, setFailedEasyUpDown] = useState({ occurred: false, reason: "" });
+  const [threePutt, setThreePutt] = useState({ occurred: false, firstPuttDistance: 0 });
+  const [penalty, setPenalty] = useState({ occurred: false, type: "", reason: "" });
+  const [wedgeRange, setWedgeRange] = useState({ wasInWedgeRange: false, shotsFromWedgeRange: 3 });
 
   const round = useQuery(api.rounds.getRound, { roundId });
   const existingHole = useQuery(api.holes.getHole, { roundId, holeNumber: holeNum });
@@ -61,14 +51,42 @@ export default function HoleTrackerPage() {
     if (existingHole) {
       setPar(existingHole.par);
       setStrokes(existingHole.strokes);
-      const stats = [];
-      if (existingHole.stats.threePutt) stats.push("threePutt");
-      if (existingHole.stats.penalty) stats.push("penalty");
-      if (existingHole.stats.bunker) stats.push("bunker");
-      if (existingHole.stats.waterHazard) stats.push("waterHazard");
-      if (existingHole.stats.outOfBounds) stats.push("outOfBounds");
-      if (existingHole.stats.duffedChip) stats.push("duffedChip");
-      setSelectedStats(stats);
+      
+      if (existingHole.outOfPosition) {
+        setOutOfPosition({
+          occurred: existingHole.outOfPosition.occurred || false,
+          reason: existingHole.outOfPosition.reason || ""
+        });
+      }
+      
+      if (existingHole.failedEasyUpDown) {
+        setFailedEasyUpDown({
+          occurred: existingHole.failedEasyUpDown.occurred || false,
+          reason: existingHole.failedEasyUpDown.reason || ""
+        });
+      }
+      
+      if (existingHole.threePutt) {
+        setThreePutt({
+          occurred: existingHole.threePutt.occurred || false,
+          firstPuttDistance: existingHole.threePutt.firstPuttDistance || 0
+        });
+      }
+      
+      if (existingHole.penalty) {
+        setPenalty({
+          occurred: existingHole.penalty.occurred || false,
+          type: existingHole.penalty.type || "",
+          reason: existingHole.penalty.reason || ""
+        });
+      }
+      
+      if (existingHole.wedgeRange) {
+        setWedgeRange({
+          wasInWedgeRange: existingHole.wedgeRange.wasInWedgeRange || false,
+          shotsFromWedgeRange: existingHole.wedgeRange.shotsFromWedgeRange || 3
+        });
+      }
     }
   }, [existingHole]);
 
@@ -80,21 +98,16 @@ export default function HoleTrackerPage() {
         holeNumber: holeNum,
         par,
         strokes,
-        stats: {
-          threePutt: selectedStats.includes("threePutt"),
-          penalty: selectedStats.includes("penalty"),
-          bunker: selectedStats.includes("bunker"),
-          waterHazard: selectedStats.includes("waterHazard"),
-          outOfBounds: selectedStats.includes("outOfBounds"),
-          duffedChip: selectedStats.includes("duffedChip"),
-        },
+        outOfPosition: outOfPosition.occurred ? outOfPosition : undefined,
+        failedEasyUpDown: failedEasyUpDown.occurred ? failedEasyUpDown : undefined,
+        threePutt: threePutt.occurred ? threePutt : undefined,
+        penalty: penalty.occurred ? penalty : undefined,
+        wedgeRange: wedgeRange.wasInWedgeRange ? wedgeRange : undefined,
       });
 
       if (holeNum === 18) {
-        // Go to summary
         router.push(`/round/${roundId}/summary`);
       } else {
-        // Go to next hole
         router.push(`/round/${roundId}/hole/${holeNum + 1}`);
       }
     } catch (error) {
@@ -111,6 +124,7 @@ export default function HoleTrackerPage() {
 
   const scoreDiff = strokes - par;
   const scoreColor = scoreDiff < 0 ? "text-green-600" : scoreDiff > 0 ? "text-red-600" : "";
+  const isDoubleBogeyOrWorse = strokes >= par + 2;
 
   // Calculate running score
   const runningScore = round?.holes
@@ -135,29 +149,24 @@ export default function HoleTrackerPage() {
       </header>
 
       <main className="container mx-auto p-4 max-w-lg space-y-4">
-        {/* Par Selection */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Par</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ToggleGroup 
-              type="single" 
-              value={par.toString()}
-              onValueChange={(value) => value && setPar(parseInt(value))}
-              className="justify-start"
-            >
-              <ToggleGroupItem value="3" className="w-16">3</ToggleGroupItem>
-              <ToggleGroupItem value="4" className="w-16">4</ToggleGroupItem>
-              <ToggleGroupItem value="5" className="w-16">5</ToggleGroupItem>
-            </ToggleGroup>
-          </CardContent>
-        </Card>
-
         {/* Score Entry */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Score</CardTitle>
+            <CardTitle className="text-lg flex items-center justify-between">
+              Score
+              <div className="flex gap-2">
+                {[3, 4, 5].map((p) => (
+                  <Button
+                    key={p}
+                    variant={par === p ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setPar(p)}
+                  >
+                    Par {p}
+                  </Button>
+                ))}
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
@@ -177,6 +186,9 @@ export default function HoleTrackerPage() {
                     {scoreDiff > 0 ? "+" : ""}{scoreDiff}
                   </div>
                 )}
+                {isDoubleBogeyOrWorse && (
+                  <Badge variant="destructive" className="mt-1">Double+</Badge>
+                )}
               </div>
 
               <Button
@@ -191,32 +203,224 @@ export default function HoleTrackerPage() {
           </CardContent>
         </Card>
 
-        {/* Stats Tracking */}
+        {/* Advanced Stats Tracking */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">What Happened?</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ToggleGroup 
-              type="multiple"
-              value={selectedStats}
-              onValueChange={setSelectedStats}
-              className="grid grid-cols-3 gap-2"
-            >
-              {Object.entries(STAT_LABELS).map(([key, label]) => {
-                const Icon = STAT_ICONS[key as keyof typeof STAT_ICONS];
-                return (
-                  <ToggleGroupItem 
-                    key={key}
-                    value={key}
-                    className="h-20 flex-col gap-2"
+          <CardContent className="space-y-3">
+            
+            {/* Out of Position */}
+            <div className="space-y-2 p-3 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="out-of-position" className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Out of Position Shot
+                </Label>
+                <Switch
+                  id="out-of-position"
+                  checked={outOfPosition.occurred}
+                  onCheckedChange={(checked) => 
+                    setOutOfPosition({ ...outOfPosition, occurred: checked })
+                  }
+                />
+              </div>
+              {outOfPosition.occurred && (
+                <Select
+                  value={outOfPosition.reason}
+                  onValueChange={(value) => 
+                    setOutOfPosition({ ...outOfPosition, reason: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Why?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lack-of-commitment">Lack of commitment</SelectItem>
+                    <SelectItem value="wrong-club">Wrong club choice</SelectItem>
+                    <SelectItem value="not-warmed-up">Not warmed up</SelectItem>
+                    <SelectItem value="poor-aim">Poor aim</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Failed Easy Up & Down */}
+            <div className="space-y-2 p-3 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="easy-up-down" className="flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4" />
+                  Failed Easy Up & Down
+                </Label>
+                <Switch
+                  id="easy-up-down"
+                  checked={failedEasyUpDown.occurred}
+                  onCheckedChange={(checked) => 
+                    setFailedEasyUpDown({ ...failedEasyUpDown, occurred: checked })
+                  }
+                />
+              </div>
+              {failedEasyUpDown.occurred && (
+                <Select
+                  value={failedEasyUpDown.reason}
+                  onValueChange={(value) => 
+                    setFailedEasyUpDown({ ...failedEasyUpDown, reason: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Why?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="poor-aim">Poor aim</SelectItem>
+                    <SelectItem value="wrong-club">Wrong club</SelectItem>
+                    <SelectItem value="lack-of-commitment">Lack of commitment</SelectItem>
+                    <SelectItem value="bad-read">Bad read</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Three Putt */}
+            <div className="space-y-2 p-3 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="three-putt" className="flex items-center gap-2">
+                  <Flag className="h-4 w-4" />
+                  Three Putt
+                </Label>
+                <Switch
+                  id="three-putt"
+                  checked={threePutt.occurred}
+                  onCheckedChange={(checked) => 
+                    setThreePutt({ ...threePutt, occurred: checked })
+                  }
+                />
+              </div>
+              {threePutt.occurred && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="putt-distance" className="text-sm">
+                    First putt distance (feet):
+                  </Label>
+                  <Input
+                    id="putt-distance"
+                    type="number"
+                    className="w-20"
+                    value={threePutt.firstPuttDistance}
+                    onChange={(e) => 
+                      setThreePutt({ ...threePutt, firstPuttDistance: parseInt(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Penalty */}
+            <div className="space-y-2 p-3 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="penalty" className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Penalty
+                </Label>
+                <Switch
+                  id="penalty"
+                  checked={penalty.occurred}
+                  onCheckedChange={(checked) => 
+                    setPenalty({ ...penalty, occurred: checked })
+                  }
+                />
+              </div>
+              {penalty.occurred && (
+                <div className="space-y-2">
+                  <Select
+                    value={penalty.type}
+                    onValueChange={(value) => 
+                      setPenalty({ ...penalty, type: value })
+                    }
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="text-xs">{label}</span>
-                  </ToggleGroupItem>
-                );
-              })}
-            </ToggleGroup>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Penalty type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="water">Water hazard</SelectItem>
+                      <SelectItem value="ob">Out of bounds</SelectItem>
+                      <SelectItem value="lost">Lost ball</SelectItem>
+                      <SelectItem value="unplayable">Unplayable lie</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={penalty.reason}
+                    onValueChange={(value) => 
+                      setPenalty({ ...penalty, reason: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Why?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="wrong-club">Wrong club</SelectItem>
+                      <SelectItem value="ego-distance">Ego distance</SelectItem>
+                      <SelectItem value="poor-aim">Poor aim</SelectItem>
+                      <SelectItem value="uncommitted">Uncommitted swing</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {/* Wedge Range Performance */}
+            <div className="space-y-2 p-3 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="wedge-range" className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Inside Wedge Range (≤120 yards)
+                </Label>
+                <Switch
+                  id="wedge-range"
+                  checked={wedgeRange.wasInWedgeRange}
+                  onCheckedChange={(checked) => 
+                    setWedgeRange({ ...wedgeRange, wasInWedgeRange: checked })
+                  }
+                />
+              </div>
+              {wedgeRange.wasInWedgeRange && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="wedge-shots" className="text-sm">
+                    Shots to hole out:
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => 
+                        setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: Math.max(1, wedgeRange.shotsFromWedgeRange - 1) })
+                      }
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-8 text-center font-medium">
+                      {wedgeRange.shotsFromWedgeRange}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => 
+                        setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: wedgeRange.shotsFromWedgeRange + 1 })
+                      }
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  {wedgeRange.shotsFromWedgeRange > 3 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {wedgeRange.shotsFromWedgeRange - 3} over par 3
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+
           </CardContent>
         </Card>
 

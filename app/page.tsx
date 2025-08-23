@@ -113,12 +113,12 @@ function Dashboard() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(userStats.stats).map(([key, value]) => {
                 const statNames: Record<string, string> = {
-                  threePutts: "Three-Putts",
-                  penalties: "Penalties",
-                  bunkers: "Bunkers",
-                  waterHazards: "Water Hazards",
-                  outOfBounds: "Out of Bounds",
-                  duffedChips: "Duffed Chips",
+                  outOfPosition: "Out of Position",
+                  failedEasyUpDown: "Failed Up & Downs",
+                  doubleBogeyOrWorse: "Double Bogeys+",
+                  threePutt: "Three-Putts",
+                  penalty: "Penalties",
+                  wedgeRangeOverPar: "Poor Wedge Play",
                 };
                 
                 const severity = value > 3 ? "destructive" : value > 1 ? "secondary" : "outline";

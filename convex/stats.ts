@@ -33,22 +33,29 @@ export const getBiggestProblem = query({
     const holes = allHoles.flat();
     if (holes.length === 0) return null;
 
-    // Calculate stat totals
+    // Calculate stat totals for the new stats
     const statTotals = {
+      outOfPosition: 0,
+      failedEasyUpDown: 0,
+      doubleBogeyOrWorse: 0,
       threePutt: 0,
       penalty: 0,
-      bunker: 0,
-      waterHazard: 0,
-      outOfBounds: 0,
-      duffedChip: 0,
+      wedgeRangeOverPar: 0,
     };
 
     holes.forEach(hole => {
-      Object.keys(statTotals).forEach(stat => {
-        if (hole.stats[stat as keyof typeof statTotals]) {
-          statTotals[stat as keyof typeof statTotals]++;
-        }
-      });
+      if (hole.outOfPosition?.occurred) statTotals.outOfPosition++;
+      if (hole.failedEasyUpDown?.occurred) statTotals.failedEasyUpDown++;
+      if (hole.doubleBogeyOrWorse?.occurred) statTotals.doubleBogeyOrWorse++;
+      if (hole.threePutt?.occurred) statTotals.threePutt++;
+      if (hole.penalty?.occurred) statTotals.penalty++;
+      
+      // Check wedge range performance (shots > 3 from wedge range)
+      if (hole.wedgeRange?.wasInWedgeRange && 
+          hole.wedgeRange.shotsFromWedgeRange && 
+          hole.wedgeRange.shotsFromWedgeRange > 3) {
+        statTotals.wedgeRangeOverPar++;
+      }
     });
 
     // Find the biggest problem
@@ -69,12 +76,12 @@ export const getBiggestProblem = query({
 
     // Format the problem name
     const problemNames: Record<string, string> = {
-      threePutt: "Three-Putting",
+      outOfPosition: "Out of Position Shots",
+      failedEasyUpDown: "Failed Easy Up & Downs",
+      doubleBogeyOrWorse: "Double Bogeys or Worse",
+      threePutt: "Three-Putts",
       penalty: "Penalties",
-      bunker: "Bunker Trouble",
-      waterHazard: "Water Hazards",
-      outOfBounds: "Out of Bounds",
-      duffedChip: "Duffed Chips",
+      wedgeRangeOverPar: "Poor Wedge Range Performance",
     };
 
     return {
@@ -104,12 +111,12 @@ export const getUserStats = query({
         roundsPlayed: 0,
         averageScore: 0,
         stats: {
-          threePutts: 0,
-          penalties: 0,
-          bunkers: 0,
-          waterHazards: 0,
-          outOfBounds: 0,
-          duffedChips: 0,
+          outOfPosition: 0,
+          failedEasyUpDown: 0,
+          doubleBogeyOrWorse: 0,
+          threePutt: 0,
+          penalty: 0,
+          wedgeRangeOverPar: 0,
         },
       };
     }
@@ -135,33 +142,39 @@ export const getUserStats = query({
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
 
-    // Calculate stat averages
+    // Calculate stat totals
     const statTotals = {
-      threePutts: 0,
-      penalties: 0,
-      bunkers: 0,
-      waterHazards: 0,
-      outOfBounds: 0,
-      duffedChips: 0,
+      outOfPosition: 0,
+      failedEasyUpDown: 0,
+      doubleBogeyOrWorse: 0,
+      threePutt: 0,
+      penalty: 0,
+      wedgeRangeOverPar: 0,
     };
 
     holes.forEach(hole => {
-      if (hole.stats.threePutt) statTotals.threePutts++;
-      if (hole.stats.penalty) statTotals.penalties++;
-      if (hole.stats.bunker) statTotals.bunkers++;
-      if (hole.stats.waterHazard) statTotals.waterHazards++;
-      if (hole.stats.outOfBounds) statTotals.outOfBounds++;
-      if (hole.stats.duffedChip) statTotals.duffedChips++;
+      if (hole.outOfPosition?.occurred) statTotals.outOfPosition++;
+      if (hole.failedEasyUpDown?.occurred) statTotals.failedEasyUpDown++;
+      if (hole.doubleBogeyOrWorse?.occurred) statTotals.doubleBogeyOrWorse++;
+      if (hole.threePutt?.occurred) statTotals.threePutt++;
+      if (hole.penalty?.occurred) statTotals.penalty++;
+      
+      // Check wedge range performance
+      if (hole.wedgeRange?.wasInWedgeRange && 
+          hole.wedgeRange.shotsFromWedgeRange && 
+          hole.wedgeRange.shotsFromWedgeRange > 3) {
+        statTotals.wedgeRangeOverPar++;
+      }
     });
 
     // Convert to per-round averages
     const stats = {
-      threePutts: parseFloat((statTotals.threePutts / rounds.length).toFixed(1)),
-      penalties: parseFloat((statTotals.penalties / rounds.length).toFixed(1)),
-      bunkers: parseFloat((statTotals.bunkers / rounds.length).toFixed(1)),
-      waterHazards: parseFloat((statTotals.waterHazards / rounds.length).toFixed(1)),
-      outOfBounds: parseFloat((statTotals.outOfBounds / rounds.length).toFixed(1)),
-      duffedChips: parseFloat((statTotals.duffedChips / rounds.length).toFixed(1)),
+      outOfPosition: parseFloat((statTotals.outOfPosition / rounds.length).toFixed(1)),
+      failedEasyUpDown: parseFloat((statTotals.failedEasyUpDown / rounds.length).toFixed(1)),
+      doubleBogeyOrWorse: parseFloat((statTotals.doubleBogeyOrWorse / rounds.length).toFixed(1)),
+      threePutt: parseFloat((statTotals.threePutt / rounds.length).toFixed(1)),
+      penalty: parseFloat((statTotals.penalty / rounds.length).toFixed(1)),
+      wedgeRangeOverPar: parseFloat((statTotals.wedgeRangeOverPar / rounds.length).toFixed(1)),
     };
 
     return {
