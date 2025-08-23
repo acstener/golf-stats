@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, AlertCircle, Home } from "lucide-react";
 import { useState } from "react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { statDescriptions } from "@/lib/stat-descriptions";
 
 export default function RoundSummaryPage() {
   const params = useParams();
@@ -121,18 +123,17 @@ export default function RoundSummaryPage() {
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(stats).map(([key, value]) => {
-                    const statNames: Record<string, string> = {
-                      outOfPosition: "Out of Position",
-                      failedEasyUpDown: "Failed Easy Up & Downs",
-                      doubleBogeyOrWorse: "Double Bogeys+",
-                      threePutt: "Three-Putts",
-                      penalty: "Penalties",
-                      wedgeRangeOverPar: "Poor Wedge Play",
-                    };
+                    const statKey = key as keyof typeof statDescriptions;
+                    const statInfo = statDescriptions[statKey];
                     
                     return (
                       <div key={key} className="flex justify-between items-center">
-                        <span className="text-sm">{statNames[key]}</span>
+                        <span className="text-sm flex items-center gap-1">
+                          {statInfo?.name || key}
+                          {statInfo && (
+                            <InfoTooltip content={statInfo.description} />
+                          )}
+                        </span>
                         <Badge variant={value === 0 ? "outline" : value > 2 ? "destructive" : "secondary"}>
                           {value}
                         </Badge>

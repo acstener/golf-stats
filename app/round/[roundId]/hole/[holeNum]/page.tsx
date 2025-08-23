@@ -26,6 +26,8 @@ import {
   Shield,
   Save
 } from "lucide-react";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { statDescriptions } from "@/lib/stat-descriptions";
 
 export default function HoleTrackerPage() {
   const params = useParams();
@@ -272,6 +274,7 @@ export default function HoleTrackerPage() {
                 <Label htmlFor="out-of-position" className="flex items-center gap-2 text-base">
                   <MapPin className="h-5 w-5" />
                   Out of Position Shot
+                  <InfoTooltip content={statDescriptions.outOfPosition.description} />
                 </Label>
                 <Switch
                   id="out-of-position"
@@ -309,6 +312,7 @@ export default function HoleTrackerPage() {
                 <Label htmlFor="easy-up-down" className="flex items-center gap-2 text-base">
                   <TrendingDown className="h-5 w-5" />
                   Failed Easy Up & Down
+                  <InfoTooltip content={statDescriptions.failedEasyUpDown.description} />
                 </Label>
                 <Switch
                   id="easy-up-down"
@@ -346,6 +350,7 @@ export default function HoleTrackerPage() {
                 <Label htmlFor="three-putt" className="flex items-center gap-2 text-base">
                   <Flag className="h-5 w-5" />
                   Three Putt
+                  <InfoTooltip content={statDescriptions.threePutt.description} />
                 </Label>
                 <Switch
                   id="three-putt"
@@ -380,6 +385,7 @@ export default function HoleTrackerPage() {
                 <Label htmlFor="penalty" className="flex items-center gap-2 text-base">
                   <AlertTriangle className="h-5 w-5" />
                   Penalty
+                  <InfoTooltip content={statDescriptions.penalty.description} />
                 </Label>
                 <Switch
                   id="penalty"
@@ -435,6 +441,7 @@ export default function HoleTrackerPage() {
                 <Label htmlFor="wedge-range" className="flex items-center gap-2 text-base">
                   <Target className="h-5 w-5" />
                   Inside Wedge Range (≤120 yards)
+                  <InfoTooltip content={statDescriptions.wedgeRangeOverPar.description} />
                 </Label>
                 <Switch
                   id="wedge-range"

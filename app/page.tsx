@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, TrendingUp, Target, PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { statDescriptions } from "@/lib/stat-descriptions";
 
 export default function Home() {
   return (
@@ -132,21 +134,18 @@ function Dashboard() {
           {userStats ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(userStats.stats).map(([key, value]) => {
-                const statNames: Record<string, string> = {
-                  outOfPosition: "Out of Position",
-                  failedEasyUpDown: "Failed Up & Downs",
-                  doubleBogeyOrWorse: "Double Bogeys+",
-                  threePutt: "Three-Putts",
-                  penalty: "Penalties",
-                  wedgeRangeOverPar: "Poor Wedge Play",
-                };
+                const statKey = key as keyof typeof statDescriptions;
+                const statInfo = statDescriptions[statKey];
                 
                 const severity = value > 3 ? "destructive" : value > 1 ? "secondary" : "outline";
                 
                 return (
                   <div key={key} className="text-center p-3 border rounded-lg">
-                    <div className="text-sm text-muted-foreground mb-1">
-                      {statNames[key]}
+                    <div className="text-sm text-muted-foreground mb-1 flex items-center justify-center gap-1">
+                      {statInfo?.name || key}
+                      {statInfo && (
+                        <InfoTooltip content={statInfo.description} />
+                      )}
                     </div>
                     <Badge variant={severity as "destructive" | "secondary" | "outline"} className="text-lg px-3 py-1">
                       {value}
