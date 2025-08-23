@@ -11,6 +11,8 @@ import Link from "next/link";
 import { SignUpButton } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
   return (
@@ -39,14 +41,10 @@ function SignInForm() {
     <div className="flex flex-col gap-8 w-96 mx-auto">
       <p>Log in to see the numbers</p>
       <SignInButton mode="modal">
-        <button className="bg-foreground text-background px-4 py-2 rounded-md">
-          Sign in
-        </button>
+        <Button>Sign in</Button>
       </SignInButton>
       <SignUpButton mode="modal">
-        <button className="bg-foreground text-background px-4 py-2 rounded-md">
-          Sign up
-        </button>
+        <Button variant="outline">Sign up</Button>
       </SignUpButton>
     </div>
   );
@@ -75,14 +73,13 @@ function Content() {
         is persisted in the Convex cloud database!
       </p>
       <p>
-        <button
-          className="bg-foreground text-background text-sm px-4 py-2 rounded-md"
+        <Button
           onClick={() => {
             void addNumber({ value: Math.floor(Math.random() * 10) });
           }}
         >
           Add a random number
-        </button>
+        </Button>
       </p>
       <p>
         Numbers:{" "}
@@ -156,11 +153,15 @@ function ResourceCard({
   href: string;
 }) {
   return (
-    <div className="flex flex-col gap-2 bg-slate-200 dark:bg-slate-800 p-4 rounded-md h-28 overflow-auto">
-      <a href={href} className="text-sm underline hover:no-underline">
-        {title}
-      </a>
-      <p className="text-xs">{description}</p>
-    </div>
+    <Card className="h-28 overflow-auto">
+      <CardHeader className="p-4">
+        <CardTitle className="text-sm">
+          <a href={href} className="underline hover:no-underline">
+            {title}
+          </a>
+        </CardTitle>
+        <CardDescription className="text-xs">{description}</CardDescription>
+      </CardHeader>
+    </Card>
   );
 }
