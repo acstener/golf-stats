@@ -53,12 +53,12 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="border-muted">
               <CardHeader>
-                <CardTitle className="text-lg">Traditional Stats Don't Help</CardTitle>
+                <CardTitle className="text-lg">Traditional Stats Don&apos;t Help</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Strokes-gained and complex metrics tell you you're worse than scratch golfers. 
-                  They don't tell you HOW to improve.
+                  Strokes-gained and complex metrics tell you you&apos;re worse than scratch golfers. 
+                  They don&apos;t tell you HOW to improve.
                 </p>
               </CardContent>
             </Card>
@@ -69,7 +69,7 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  You're playing well, then BAM - a triple bogey appears. 
+                  You&apos;re playing well, then BAM - a triple bogey appears. 
                   You never understand why it keeps happening.
                 </p>
               </CardContent>
@@ -82,7 +82,7 @@ export default function LandingPage() {
               <CardContent>
                 <p className="text-muted-foreground">
                   Bad shot leads to impossible recovery attempt. 
-                  Now you're writing an 8 instead of a 5.
+                  Now you&apos;re writing an 8 instead of a 5.
                 </p>
               </CardContent>
             </Card>
@@ -93,7 +93,7 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  You know you're inconsistent but can't identify what to work on. 
+                  You know you&apos;re inconsistent but can&apos;t identify what to work on. 
                   Every round feels like starting over.
                 </p>
               </CardContent>
@@ -117,7 +117,7 @@ export default function LandingPage() {
                 <div>
                   <p className="font-medium">Knowing exactly where big numbers come from</p>
                   <p className="text-sm text-muted-foreground">
-                    "My doubles mostly start with out-of-position tee shots"
+                    &quot;My doubles mostly start with out-of-position tee shots&quot;
                   </p>
                 </div>
               </div>
@@ -127,7 +127,7 @@ export default function LandingPage() {
                 <div>
                   <p className="font-medium">Understanding the root cause of mistakes</p>
                   <p className="text-sm text-muted-foreground">
-                    "I three-putt when my approach leaves me above the hole"
+                    &quot;I three-putt when my approach leaves me above the hole&quot;
                   </p>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function LandingPage() {
                 <div>
                   <p className="font-medium">Having specific fixes, not generic advice</p>
                   <p className="text-sm text-muted-foreground">
-                    "Play to the fat side of the fairway on holes 3, 7, and 14"
+                    &quot;Play to the fat side of the fairway on holes 3, 7, and 14&quot;
                   </p>
                 </div>
               </div>
@@ -147,7 +147,7 @@ export default function LandingPage() {
                 <div>
                   <p className="font-medium">Eliminating compounding errors</p>
                   <p className="text-sm text-muted-foreground">
-                    "When out of position, just get back in play - no hero shots"
+                    &quot;When out of position, just get back in play - no hero shots&quot;
                   </p>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  When you can't hit your normal swing. Track why: lack of commitment, 
+                  When you can&apos;t hit your normal swing. Track why: lack of commitment, 
                   wrong club, not warmed up.
                 </CardDescription>
               </CardContent>
@@ -185,8 +185,8 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  When you don't get up and down from situations YOU consider easy. 
-                  Everyone's "easy" is different.
+                  When you don&apos;t get up and down from situations YOU consider easy. 
+                  Everyone&apos;s &quot;easy&quot; is different.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -250,7 +250,7 @@ export default function LandingPage() {
                 This creates patterns that lead to specific solutions.
               </p>
               <p className="text-sm text-muted-foreground italic">
-                "Golf really is a game of minimizing your mistakes" - Not chasing perfection.
+                &quot;Golf really is a game of minimizing your mistakes&quot; - Not chasing perfection.
               </p>
             </CardContent>
           </Card>
@@ -267,7 +267,7 @@ export default function LandingPage() {
               <div className="space-y-2">
                 <h4 className="font-medium">No Compounding Errors</h4>
                 <p className="text-sm text-muted-foreground">
-                  When you're in trouble, get back in play. Hero shots turn bogeys into triples.
+                  When you&apos;re in trouble, get back in play. Hero shots turn bogeys into triples.
                 </p>
               </div>
               
@@ -329,8 +329,8 @@ export default function LandingPage() {
           <div className="text-center text-sm text-muted-foreground">
             <p>© 2024 Sidekick 6 Golf. Built for amateur golfers, by amateur golfers.</p>
             <p className="mt-2 italic">
-              "Every second you're logging stats is a second you're not facing your demons. 
-              But these stats help you find the right demons."
+              &quot;Every second you&apos;re logging stats is a second you&apos;re not facing your demons. 
+              But these stats help you find the right demons.&quot;
             </p>
           </div>
         </div>
