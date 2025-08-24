@@ -11,49 +11,27 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { statDescriptions } from "@/lib/stat-descriptions";
+import LandingPage from "./landing";
 
 export default function Home() {
   return (
     <>
-      <header className="sticky top-0 z-10 bg-background border-b p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Sidekick 6 Golf</h1>
-          <UserButton />
-        </div>
-      </header>
-      
-      <main className="container mx-auto p-4">
-        <Authenticated>
+      <Authenticated>
+        <header className="sticky top-0 z-10 bg-background border-b p-4">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-xl font-bold">Sidekick 6 Golf</h1>
+            <UserButton />
+          </div>
+        </header>
+        
+        <main className="container mx-auto p-4">
           <Dashboard />
-        </Authenticated>
-        <Unauthenticated>
-          <SignInForm />
-        </Unauthenticated>
-      </main>
+        </main>
+      </Authenticated>
+      <Unauthenticated>
+        <LandingPage />
+      </Unauthenticated>
     </>
-  );
-}
-
-function SignInForm() {
-  return (
-    <div className="max-w-md mx-auto mt-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome to Sidekick 6</CardTitle>
-          <CardDescription>
-            Track your golf stats and improve your game
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <SignInButton mode="modal">
-            <Button className="w-full">Sign In</Button>
-          </SignInButton>
-          <SignUpButton mode="modal">
-            <Button variant="outline" className="w-full">Sign Up</Button>
-          </SignUpButton>
-        </CardContent>
-      </Card>
-    </div>
   );
 }
 
