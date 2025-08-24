@@ -1,9 +1,8 @@
 export default {
   providers: [
     {
-      // Use environment variable for flexibility between dev and prod
-      // Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard
-      domain: process.env.CLERK_JWT_ISSUER_DOMAIN!,
+      // Using dev Clerk instance for now
+      domain: "https://relevant-dassie-96.clerk.accounts.dev",
       applicationID: "convex",
     },
   ],
