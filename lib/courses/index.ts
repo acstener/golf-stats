@@ -50,7 +50,7 @@ type RawTee = {
 };
 
 type RawCourse = {
-  club: { name: string; region_name: string; description?: string };
+  club: { name: string; region_name: string; description?: string | null };
   course: { name: string; par: number };
   tees: RawTee[];
 };
@@ -62,7 +62,7 @@ function normalize(id: string, raw: RawCourse): Course {
     clubName: raw.club.name,
     region: raw.club.region_name,
     par: raw.course.par,
-    description: raw.club.description,
+    description: raw.club.description ?? undefined,
     tees: raw.tees.map((t) => ({
       id: t.id,
       name: t.name,

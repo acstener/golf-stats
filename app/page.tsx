@@ -19,7 +19,7 @@ export default function Home() {
       <Authenticated>
         <header className="sticky top-0 z-10 bg-background border-b p-4">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold">Sidekick 6 Golf</h1>
+            <h1 className="text-xl font-bold">Golf.gg</h1>
             <UserButton />
           </div>
         </header>

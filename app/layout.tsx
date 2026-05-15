@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sidekick 6 Golf - Track What Actually Matters",
+  title: "Golf.gg — Track What Actually Matters",
   description: "Track the 6 golf stats that actually matter for amateur golfers. Understand why mistakes happen and play better golf.",
   icons: {
     icon: "/convex.svg",

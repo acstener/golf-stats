@@ -10,7 +10,7 @@ export default function LandingPage() {
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Sidekick 6 Golf</h1>
+          <h1 className="text-xl font-bold">Golf.gg</h1>
           <div className="flex gap-2">
             <SignInButton mode="modal">
               <Button variant="ghost" size="sm">Sign In</Button>
@@ -156,11 +156,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Fix Section - The Sidekick 6 */}
+      {/* Fix Section - The Golf.gg Six */}
       <section className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="space-y-8">
           <div className="text-center">
-            <h3 className="text-2xl font-semibold mb-2">The Sidekick 6 Solution</h3>
+            <h3 className="text-2xl font-semibold mb-2">The Golf.gg Solution</h3>
             <p className="text-muted-foreground">
               Track only what matters. Understand why it happens. Fix it.
             </p>
@@ -327,7 +327,7 @@ export default function LandingPage() {
       <footer className="border-t">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
-            <p>© 2024 Sidekick 6 Golf. Built for amateur golfers, by amateur golfers.</p>
+            <p>© 2026 Golf.gg. Built for amateur golfers, by amateur golfers.</p>
             <p className="mt-2 italic">
               &quot;Every second you&apos;re logging stats is a second you&apos;re not facing your demons. 
               But these stats help you find the right demons.&quot;

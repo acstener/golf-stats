@@ -1,4 +1,4 @@
-# Sidekick 6 Golf App - Master Planning Document
+# Golf.gg - Master Planning Document
 
 ## 🎯 Project Overview
 A mobile-first golf stat tracking app that helps golfers identify and fix their biggest on-course problems. Built with Next.js, Convex, Clerk, and shadcn/ui.
