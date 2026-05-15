@@ -1,0 +1,711 @@
+{
+  "club": {
+    "id": "b7c48286-fe34-4543-9d1b-3b2f434bf53c",
+    "name": "The Dyke Golf Club",
+    "description": "Founded in 1906 and designed by legendary course designer - James Braid",
+    "country_code": "ENG",
+    "region_name": "Sussex",
+    "google_rating": 4.5,
+    "google_review_count": 182
+  },
+  "course": {
+    "id": "706fea20-e74c-489f-bb85-e9e4791ef7a2",
+    "name": "Dyke",
+    "par": 72,
+    "holes_count": 18,
+    "designed_by": null,
+    "year_opened": null
+  },
+  "tees": [
+    {
+      "id": "a1c7c77b-238d-4011-b8ca-0f34ee166189",
+      "name": "White",
+      "colour": "White",
+      "gender": "Male",
+      "total_yardage": 6653,
+      "par": 72,
+      "course_rating": 72.9,
+      "slope_rating": 134,
+      "holes": [
+        {
+          "hole_number": 1,
+          "par": 5,
+          "stroke_index": 16,
+          "yardage": 506,
+          "metres": 462
+        },
+        {
+          "hole_number": 2,
+          "par": 5,
+          "stroke_index": 18,
+          "yardage": 510,
+          "metres": 466
+        },
+        {
+          "hole_number": 3,
+          "par": 4,
+          "stroke_index": 14,
+          "yardage": 341,
+          "metres": 311
+        },
+        {
+          "hole_number": 4,
+          "par": 5,
+          "stroke_index": 6,
+          "yardage": 517,
+          "metres": 472
+        },
+        {
+          "hole_number": 5,
+          "par": 3,
+          "stroke_index": 10,
+          "yardage": 192,
+          "metres": 175
+        },
+        {
+          "hole_number": 6,
+          "par": 4,
+          "stroke_index": 2,
+          "yardage": 447,
+          "metres": 408
+        },
+        {
+          "hole_number": 7,
+          "par": 4,
+          "stroke_index": 8,
+          "yardage": 337,
+          "metres": 308
+        },
+        {
+          "hole_number": 8,
+          "par": 3,
+          "stroke_index": 12,
+          "yardage": 157,
+          "metres": 143
+        },
+        {
+          "hole_number": 9,
+          "par": 4,
+          "stroke_index": 4,
+          "yardage": 406,
+          "metres": 371
+        },
+        {
+          "hole_number": 10,
+          "par": 4,
+          "stroke_index": 7,
+          "yardage": 415,
+          "metres": 379
+        },
+        {
+          "hole_number": 11,
+          "par": 5,
+          "stroke_index": 15,
+          "yardage": 539,
+          "metres": 492
+        },
+        {
+          "hole_number": 12,
+          "par": 4,
+          "stroke_index": 3,
+          "yardage": 372,
+          "metres": 340
+        },
+        {
+          "hole_number": 13,
+          "par": 4,
+          "stroke_index": 9,
+          "yardage": 405,
+          "metres": 370
+        },
+        {
+          "hole_number": 14,
+          "par": 3,
+          "stroke_index": 13,
+          "yardage": 159,
+          "metres": 145
+        },
+        {
+          "hole_number": 15,
+          "par": 4,
+          "stroke_index": 5,
+          "yardage": 365,
+          "metres": 333
+        },
+        {
+          "hole_number": 16,
+          "par": 4,
+          "stroke_index": 1,
+          "yardage": 457,
+          "metres": 417
+        },
+        {
+          "hole_number": 17,
+          "par": 3,
+          "stroke_index": 11,
+          "yardage": 208,
+          "metres": 190
+        },
+        {
+          "hole_number": 18,
+          "par": 4,
+          "stroke_index": 17,
+          "yardage": 320,
+          "metres": 292
+        }
+      ]
+    },
+    {
+      "id": "e7520b33-d277-424f-8531-30ae7f9601c8",
+      "name": "Yellow",
+      "colour": "Yellow",
+      "gender": "Male",
+      "total_yardage": 6351,
+      "par": 72,
+      "course_rating": 71.5,
+      "slope_rating": 132,
+      "holes": [
+        {
+          "hole_number": 1,
+          "par": 5,
+          "stroke_index": 16,
+          "yardage": 492,
+          "metres": 449
+        },
+        {
+          "hole_number": 2,
+          "par": 5,
+          "stroke_index": 18,
+          "yardage": 493,
+          "metres": 450
+        },
+        {
+          "hole_number": 3,
+          "par": 4,
+          "stroke_index": 14,
+          "yardage": 320,
+          "metres": 292
+        },
+        {
+          "hole_number": 4,
+          "par": 5,
+          "stroke_index": 6,
+          "yardage": 497,
+          "metres": 454
+        },
+        {
+          "hole_number": 5,
+          "par": 3,
+          "stroke_index": 10,
+          "yardage": 180,
+          "metres": 164
+        },
+        {
+          "hole_number": 6,
+          "par": 4,
+          "stroke_index": 2,
+          "yardage": 437,
+          "metres": 399
+        },
+        {
+          "hole_number": 7,
+          "par": 4,
+          "stroke_index": 8,
+          "yardage": 323,
+          "metres": 295
+        },
+        {
+          "hole_number": 8,
+          "par": 3,
+          "stroke_index": 12,
+          "yardage": 138,
+          "metres": 126
+        },
+        {
+          "hole_number": 9,
+          "par": 4,
+          "stroke_index": 4,
+          "yardage": 389,
+          "metres": 355
+        },
+        {
+          "hole_number": 10,
+          "par": 4,
+          "stroke_index": 7,
+          "yardage": 397,
+          "metres": 363
+        },
+        {
+          "hole_number": 11,
+          "par": 5,
+          "stroke_index": 15,
+          "yardage": 519,
+          "metres": 474
+        },
+        {
+          "hole_number": 12,
+          "par": 4,
+          "stroke_index": 3,
+          "yardage": 361,
+          "metres": 330
+        },
+        {
+          "hole_number": 13,
+          "par": 4,
+          "stroke_index": 9,
+          "yardage": 370,
+          "metres": 338
+        },
+        {
+          "hole_number": 14,
+          "par": 3,
+          "stroke_index": 13,
+          "yardage": 150,
+          "metres": 137
+        },
+        {
+          "hole_number": 15,
+          "par": 4,
+          "stroke_index": 5,
+          "yardage": 345,
+          "metres": 315
+        },
+        {
+          "hole_number": 16,
+          "par": 4,
+          "stroke_index": 1,
+          "yardage": 443,
+          "metres": 405
+        },
+        {
+          "hole_number": 17,
+          "par": 3,
+          "stroke_index": 11,
+          "yardage": 192,
+          "metres": 175
+        },
+        {
+          "hole_number": 18,
+          "par": 4,
+          "stroke_index": 17,
+          "yardage": 305,
+          "metres": 278
+        }
+      ]
+    },
+    {
+      "id": "3030c835-6e24-4b31-89f3-2c10e6b5054b",
+      "name": "Black",
+      "colour": "Black",
+      "gender": "Male",
+      "total_yardage": 6009,
+      "par": 72,
+      "course_rating": 69.9,
+      "slope_rating": 126,
+      "holes": [
+        {
+          "hole_number": 1,
+          "par": 5,
+          "stroke_index": 16,
+          "yardage": 456,
+          "metres": 416
+        },
+        {
+          "hole_number": 2,
+          "par": 5,
+          "stroke_index": 18,
+          "yardage": 481,
+          "metres": 439
+        },
+        {
+          "hole_number": 3,
+          "par": 4,
+          "stroke_index": 14,
+          "yardage": 296,
+          "metres": 270
+        },
+        {
+          "hole_number": 4,
+          "par": 5,
+          "stroke_index": 6,
+          "yardage": 457,
+          "metres": 417
+        },
+        {
+          "hole_number": 5,
+          "par": 3,
+          "stroke_index": 10,
+          "yardage": 177,
+          "metres": 161
+        },
+        {
+          "hole_number": 6,
+          "par": 4,
+          "stroke_index": 2,
+          "yardage": 416,
+          "metres": 380
+        },
+        {
+          "hole_number": 7,
+          "par": 4,
+          "stroke_index": 8,
+          "yardage": 306,
+          "metres": 279
+        },
+        {
+          "hole_number": 8,
+          "par": 3,
+          "stroke_index": 12,
+          "yardage": 134,
+          "metres": 122
+        },
+        {
+          "hole_number": 9,
+          "par": 4,
+          "stroke_index": 4,
+          "yardage": 366,
+          "metres": 334
+        },
+        {
+          "hole_number": 10,
+          "par": 4,
+          "stroke_index": 7,
+          "yardage": 378,
+          "metres": 345
+        },
+        {
+          "hole_number": 11,
+          "par": 5,
+          "stroke_index": 15,
+          "yardage": 518,
+          "metres": 473
+        },
+        {
+          "hole_number": 12,
+          "par": 4,
+          "stroke_index": 3,
+          "yardage": 339,
+          "metres": 309
+        },
+        {
+          "hole_number": 13,
+          "par": 4,
+          "stroke_index": 9,
+          "yardage": 338,
+          "metres": 309
+        },
+        {
+          "hole_number": 14,
+          "par": 3,
+          "stroke_index": 13,
+          "yardage": 135,
+          "metres": 123
+        },
+        {
+          "hole_number": 15,
+          "par": 4,
+          "stroke_index": 5,
+          "yardage": 321,
+          "metres": 293
+        },
+        {
+          "hole_number": 16,
+          "par": 4,
+          "stroke_index": 1,
+          "yardage": 427,
+          "metres": 390
+        },
+        {
+          "hole_number": 17,
+          "par": 3,
+          "stroke_index": 11,
+          "yardage": 177,
+          "metres": 161
+        },
+        {
+          "hole_number": 18,
+          "par": 4,
+          "stroke_index": 17,
+          "yardage": 287,
+          "metres": 262
+        }
+      ]
+    },
+    {
+      "id": "13dabf2e-6c40-428c-aeb8-8b35b5bc343b",
+      "name": "Blue",
+      "colour": "Blue",
+      "gender": "Male",
+      "total_yardage": 5383,
+      "par": 72,
+      "course_rating": 66.5,
+      "slope_rating": 121,
+      "holes": [
+        {
+          "hole_number": 1,
+          "par": 5,
+          "stroke_index": 16,
+          "yardage": 452,
+          "metres": 413
+        },
+        {
+          "hole_number": 2,
+          "par": 5,
+          "stroke_index": 18,
+          "yardage": 460,
+          "metres": 420
+        },
+        {
+          "hole_number": 3,
+          "par": 4,
+          "stroke_index": 14,
+          "yardage": 294,
+          "metres": 268
+        },
+        {
+          "hole_number": 4,
+          "par": 5,
+          "stroke_index": 6,
+          "yardage": 376,
+          "metres": 343
+        },
+        {
+          "hole_number": 5,
+          "par": 3,
+          "stroke_index": 10,
+          "yardage": 112,
+          "metres": 102
+        },
+        {
+          "hole_number": 6,
+          "par": 4,
+          "stroke_index": 2,
+          "yardage": 304,
+          "metres": 277
+        },
+        {
+          "hole_number": 7,
+          "par": 4,
+          "stroke_index": 8,
+          "yardage": 280,
+          "metres": 256
+        },
+        {
+          "hole_number": 8,
+          "par": 3,
+          "stroke_index": 12,
+          "yardage": 132,
+          "metres": 120
+        },
+        {
+          "hole_number": 9,
+          "par": 4,
+          "stroke_index": 4,
+          "yardage": 366,
+          "metres": 334
+        },
+        {
+          "hole_number": 10,
+          "par": 4,
+          "stroke_index": 7,
+          "yardage": 377,
+          "metres": 344
+        },
+        {
+          "hole_number": 11,
+          "par": 5,
+          "stroke_index": 15,
+          "yardage": 354,
+          "metres": 323
+        },
+        {
+          "hole_number": 12,
+          "par": 4,
+          "stroke_index": 3,
+          "yardage": 337,
+          "metres": 308
+        },
+        {
+          "hole_number": 13,
+          "par": 4,
+          "stroke_index": 9,
+          "yardage": 290,
+          "metres": 265
+        },
+        {
+          "hole_number": 14,
+          "par": 3,
+          "stroke_index": 13,
+          "yardage": 134,
+          "metres": 122
+        },
+        {
+          "hole_number": 15,
+          "par": 4,
+          "stroke_index": 5,
+          "yardage": 325,
+          "metres": 297
+        },
+        {
+          "hole_number": 16,
+          "par": 4,
+          "stroke_index": 1,
+          "yardage": 367,
+          "metres": 335
+        },
+        {
+          "hole_number": 17,
+          "par": 3,
+          "stroke_index": 11,
+          "yardage": 160,
+          "metres": 146
+        },
+        {
+          "hole_number": 18,
+          "par": 4,
+          "stroke_index": 17,
+          "yardage": 263,
+          "metres": 240
+        }
+      ]
+    },
+    {
+      "id": "7023a55e-7f57-42cd-b722-05dd6cf9a3ec",
+      "name": "Red",
+      "colour": "Red",
+      "gender": "Male",
+      "total_yardage": 5521,
+      "par": 72,
+      "course_rating": 67.4,
+      "slope_rating": 119,
+      "holes": [
+        {
+          "hole_number": 1,
+          "par": 5,
+          "stroke_index": 16,
+          "yardage": 429,
+          "metres": 392
+        },
+        {
+          "hole_number": 2,
+          "par": 4,
+          "stroke_index": 18,
+          "yardage": 413,
+          "metres": 377
+        },
+        {
+          "hole_number": 3,
+          "par": 4,
+          "stroke_index": 14,
+          "yardage": 271,
+          "metres": 247
+        },
+        {
+          "hole_number": 4,
+          "par": 4,
+          "stroke_index": 6,
+          "yardage": 379,
+          "metres": 346
+        },
+        {
+          "hole_number": 5,
+          "par": 3,
+          "stroke_index": 10,
+          "yardage": 156,
+          "metres": 142
+        },
+        {
+          "hole_number": 6,
+          "par": 5,
+          "stroke_index": 2,
+          "yardage": 408,
+          "metres": 373
+        },
+        {
+          "hole_number": 7,
+          "par": 4,
+          "stroke_index": 8,
+          "yardage": 281,
+          "metres": 256
+        },
+        {
+          "hole_number": 8,
+          "par": 3,
+          "stroke_index": 12,
+          "yardage": 134,
+          "metres": 122
+        },
+        {
+          "hole_number": 9,
+          "par": 4,
+          "stroke_index": 4,
+          "yardage": 322,
+          "metres": 294
+        },
+        {
+          "hole_number": 10,
+          "par": 4,
+          "stroke_index": 7,
+          "yardage": 345,
+          "metres": 315
+        },
+        {
+          "hole_number": 11,
+          "par": 5,
+          "stroke_index": 15,
+          "yardage": 471,
+          "metres": 430
+        },
+        {
+          "hole_number": 12,
+          "par": 4,
+          "stroke_index": 3,
+          "yardage": 314,
+          "metres": 287
+        },
+        {
+          "hole_number": 13,
+          "par": 4,
+          "stroke_index": 9,
+          "yardage": 346,
+          "metres": 316
+        },
+        {
+          "hole_number": 14,
+          "par": 3,
+          "stroke_index": 13,
+          "yardage": 112,
+          "metres": 102
+        },
+        {
+          "hole_number": 15,
+          "par": 4,
+          "stroke_index": 5,
+          "yardage": 314,
+          "metres": 287
+        },
+        {
+          "hole_number": 16,
+          "par": 5,
+          "stroke_index": 1,
+          "yardage": 417,
+          "metres": 381
+        },
+        {
+          "hole_number": 17,
+          "par": 3,
+          "stroke_index": 11,
+          "yardage": 166,
+          "metres": 151
+        },
+        {
+          "hole_number": 18,
+          "par": 4,
+          "stroke_index": 17,
+          "yardage": 243,
+          "metres": 222
+        }
+      ]
+    }
+  ]
+}

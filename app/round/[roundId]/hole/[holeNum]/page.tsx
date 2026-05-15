@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Minus, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Minus,
   Plus,
   Target,
   Flag,
@@ -24,84 +24,122 @@ import {
   MapPin,
   TrendingDown,
   Shield,
-  Save
+  Save,
 } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { statDescriptions } from "@/lib/stat-descriptions";
+import { findCourse, findTee, findHole } from "@/lib/courses";
+
+type Round = NonNullable<ReturnType<typeof useRoundQuery>>;
+type ExistingHole = Doc<"holes"> | null;
+
+function useRoundQuery(roundId: Id<"rounds">) {
+  return useQuery(api.rounds.getRound, { roundId });
+}
 
 export default function HoleTrackerPage() {
   const params = useParams();
-  const router = useRouter();
   const roundId = params.roundId as Id<"rounds">;
   const holeNum = parseInt(params.holeNum as string);
 
-  const [par, setPar] = useState(4);
-  const [strokes, setStrokes] = useState(4);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Stat states
-  const [outOfPosition, setOutOfPosition] = useState({ occurred: false, reason: "" });
-  const [failedEasyUpDown, setFailedEasyUpDown] = useState({ occurred: false, reason: "" });
-  const [threePutt, setThreePutt] = useState({ occurred: false, firstPuttDistance: 0 });
-  const [penalty, setPenalty] = useState({ occurred: false, type: "", reason: "" });
-  const [wedgeRange, setWedgeRange] = useState({ wasInWedgeRange: false, shotsFromWedgeRange: 3, reason: "" });
-  const [heroShotsAvoided, setHeroShotsAvoided] = useState({ occurred: false, description: "" });
-
-  const round = useQuery(api.rounds.getRound, { roundId });
+  const round = useRoundQuery(roundId);
   const existingHole = useQuery(api.holes.getHole, { roundId, holeNumber: holeNum });
+
+  // Wait until both queries resolve so the form mounts with correct initial state.
+  if (round === undefined || existingHole === undefined) {
+    return <HoleSkeleton holeNum={holeNum} />;
+  }
+  if (round === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <p className="text-muted-foreground">Round not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <HoleEditor
+      key={holeNum}
+      roundId={roundId}
+      holeNum={holeNum}
+      round={round}
+      existingHole={existingHole}
+    />
+  );
+}
+
+function HoleSkeleton({ holeNum }: { holeNum: number }) {
+  return (
+    <div className="min-h-screen bg-background pb-20">
+      <header className="sticky top-0 z-10 bg-background border-b">
+        <div className="container mx-auto p-4">
+          <div className="flex items-center justify-between mb-2">
+            <Badge variant="outline" className="text-lg px-4 py-2">Hole {holeNum}</Badge>
+          </div>
+          <Progress value={(holeNum / 18) * 100} className="h-3" />
+        </div>
+      </header>
+      <main className="container mx-auto p-4 max-w-lg space-y-5">
+        <div className="animate-pulse h-40 bg-muted rounded-lg" />
+        <div className="animate-pulse h-96 bg-muted rounded-lg" />
+      </main>
+    </div>
+  );
+}
+
+function HoleEditor({
+  roundId,
+  holeNum,
+  round,
+  existingHole,
+}: {
+  roundId: Id<"rounds">;
+  holeNum: number;
+  round: Round;
+  existingHole: ExistingHole;
+}) {
+  const router = useRouter();
   const saveHole = useMutation(api.holes.saveHole);
 
-  // Load existing hole data
-  useEffect(() => {
-    if (existingHole) {
-      setPar(existingHole.par);
-      setStrokes(existingHole.strokes);
-      
-      if (existingHole.outOfPosition) {
-        setOutOfPosition({
-          occurred: existingHole.outOfPosition.occurred || false,
-          reason: existingHole.outOfPosition.reason || ""
-        });
-      }
-      
-      if (existingHole.failedEasyUpDown) {
-        setFailedEasyUpDown({
-          occurred: existingHole.failedEasyUpDown.occurred || false,
-          reason: existingHole.failedEasyUpDown.reason || ""
-        });
-      }
-      
-      if (existingHole.threePutt) {
-        setThreePutt({
-          occurred: existingHole.threePutt.occurred || false,
-          firstPuttDistance: existingHole.threePutt.firstPuttDistance || 0
-        });
-      }
-      
-      if (existingHole.penalty) {
-        setPenalty({
-          occurred: existingHole.penalty.occurred || false,
-          type: existingHole.penalty.type || "",
-          reason: existingHole.penalty.reason || ""
-        });
-      }
-      
-      if (existingHole.wedgeRange) {
-        setWedgeRange({
-          wasInWedgeRange: existingHole.wedgeRange.wasInWedgeRange || false,
-          shotsFromWedgeRange: existingHole.wedgeRange.shotsFromWedgeRange || 3,
-          reason: existingHole.wedgeRange.reason || ""
-        });
-      }
-      
-      if (existingHole.heroShotsAvoided) {
-        setHeroShotsAvoided({
-          occurred: existingHole.heroShotsAvoided.occurred || false,
-          description: existingHole.heroShotsAvoided.description || ""
-        });
-      }
-    }
-  }, [existingHole]);
+  // Course/tee/hole metadata
+  const course = findCourse(round.courseId);
+  const tee = findTee(course, round.teeId);
+  const courseHole = findHole(tee, holeNum);
+
+  // Seed state lazily so first render is correct — no useEffect sync.
+  const seedPar = existingHole?.par ?? courseHole?.par ?? 4;
+  const seedStrokes = existingHole?.strokes ?? seedPar;
+
+  const [par, setPar] = useState(seedPar);
+  const [strokes, setStrokes] = useState(seedStrokes);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [outOfPosition, setOutOfPosition] = useState({
+    occurred: existingHole?.outOfPosition?.occurred ?? false,
+    reason: existingHole?.outOfPosition?.reason ?? "",
+  });
+  const [failedEasyUpDown, setFailedEasyUpDown] = useState({
+    occurred: existingHole?.failedEasyUpDown?.occurred ?? false,
+    reason: existingHole?.failedEasyUpDown?.reason ?? "",
+  });
+  const [threePutt, setThreePutt] = useState({
+    occurred: existingHole?.threePutt?.occurred ?? false,
+    firstPuttDistance: existingHole?.threePutt?.firstPuttDistance ?? 0,
+  });
+  const [penalty, setPenalty] = useState({
+    occurred: existingHole?.penalty?.occurred ?? false,
+    type: existingHole?.penalty?.type ?? "",
+    reason: existingHole?.penalty?.reason ?? "",
+  });
+  const [wedgeRange, setWedgeRange] = useState({
+    wasInWedgeRange: existingHole?.wedgeRange?.wasInWedgeRange ?? false,
+    shotsFromWedgeRange: existingHole?.wedgeRange?.shotsFromWedgeRange ?? 3,
+    reason: existingHole?.wedgeRange?.reason ?? "",
+  });
+  const [heroShotsAvoided, setHeroShotsAvoided] = useState({
+    occurred: existingHole?.heroShotsAvoided?.occurred ?? false,
+    description: existingHole?.heroShotsAvoided?.description ?? "",
+  });
 
   const handleSaveHole = async () => {
     setIsSaving(true);
@@ -155,9 +193,8 @@ export default function HoleTrackerPage() {
   const scoreColor = scoreDiff < 0 ? "text-green-600" : scoreDiff > 0 ? "text-red-600" : "";
   const isDoubleBogeyOrWorse = strokes >= par + 2;
 
-  // Calculate running score
-  const runningScore = round?.holes
-    ?.filter(h => h.holeNumber < holeNum)
+  const runningScore = round.holes
+    ?.filter((h) => h.holeNumber < holeNum)
     .reduce((acc, h) => acc + (h.strokes - h.par), 0) || 0;
 
   return (
@@ -169,10 +206,20 @@ export default function HoleTrackerPage() {
             <Badge variant="outline" className="text-lg px-4 py-2">
               Hole {holeNum} • Par {par}
             </Badge>
-            <Badge variant={runningScore > 0 ? "destructive" : runningScore < 0 ? "default" : "secondary"} className="px-4 py-2">
+            <Badge
+              variant={runningScore > 0 ? "destructive" : runningScore < 0 ? "default" : "secondary"}
+              className="px-4 py-2"
+            >
               {runningScore > 0 ? "+" : ""}{runningScore}
             </Badge>
           </div>
+          {courseHole && (
+            <div className="flex gap-4 text-sm text-muted-foreground mb-2">
+              <span><strong className="text-foreground">{courseHole.yardage}</strong> yd</span>
+              <span>SI <strong className="text-foreground">{courseHole.strokeIndex}</strong></span>
+              {tee && <span className="ml-auto">{tee.name} tees</span>}
+            </div>
+          )}
           <Progress value={(holeNum / 18) * 100} className="h-3" />
         </div>
       </header>
@@ -208,7 +255,7 @@ export default function HoleTrackerPage() {
               >
                 <Minus className="h-6 w-6" />
               </Button>
-              
+
               <div className="flex-1 text-center">
                 <div className="text-5xl font-bold">{strokes}</div>
                 {strokes !== par && (
@@ -239,7 +286,7 @@ export default function HoleTrackerPage() {
             <CardTitle className="text-lg">What Happened?</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            
+
             {/* Hero Shots Avoided (Positive Stat) */}
             <div className="space-y-3 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
               <div className="flex items-center justify-between">
@@ -250,7 +297,7 @@ export default function HoleTrackerPage() {
                 <Switch
                   id="hero-shots"
                   checked={heroShotsAvoided.occurred}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setHeroShotsAvoided({ ...heroShotsAvoided, occurred: checked })
                   }
                   className="scale-125"
@@ -260,7 +307,7 @@ export default function HoleTrackerPage() {
                 <Input
                   placeholder="What risky shot did you avoid?"
                   value={heroShotsAvoided.description}
-                  onChange={(e) => 
+                  onChange={(e) =>
                     setHeroShotsAvoided({ ...heroShotsAvoided, description: e.target.value })
                   }
                   className="h-12"
@@ -279,7 +326,7 @@ export default function HoleTrackerPage() {
                 <Switch
                   id="out-of-position"
                   checked={outOfPosition.occurred}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setOutOfPosition({ ...outOfPosition, occurred: checked })
                   }
                   className="scale-125"
@@ -288,7 +335,7 @@ export default function HoleTrackerPage() {
               {outOfPosition.occurred && (
                 <Select
                   value={outOfPosition.reason}
-                  onValueChange={(value) => 
+                  onValueChange={(value) =>
                     setOutOfPosition({ ...outOfPosition, reason: value })
                   }
                 >
@@ -317,7 +364,7 @@ export default function HoleTrackerPage() {
                 <Switch
                   id="easy-up-down"
                   checked={failedEasyUpDown.occurred}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFailedEasyUpDown({ ...failedEasyUpDown, occurred: checked })
                   }
                   className="scale-125"
@@ -326,7 +373,7 @@ export default function HoleTrackerPage() {
               {failedEasyUpDown.occurred && (
                 <Select
                   value={failedEasyUpDown.reason}
-                  onValueChange={(value) => 
+                  onValueChange={(value) =>
                     setFailedEasyUpDown({ ...failedEasyUpDown, reason: value })
                   }
                 >
@@ -355,7 +402,7 @@ export default function HoleTrackerPage() {
                 <Switch
                   id="three-putt"
                   checked={threePutt.occurred}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setThreePutt({ ...threePutt, occurred: checked })
                   }
                   className="scale-125"
@@ -371,7 +418,7 @@ export default function HoleTrackerPage() {
                     type="number"
                     className="w-24 h-12"
                     value={threePutt.firstPuttDistance}
-                    onChange={(e) => 
+                    onChange={(e) =>
                       setThreePutt({ ...threePutt, firstPuttDistance: parseInt(e.target.value) || 0 })
                     }
                   />
@@ -390,7 +437,7 @@ export default function HoleTrackerPage() {
                 <Switch
                   id="penalty"
                   checked={penalty.occurred}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setPenalty({ ...penalty, occurred: checked })
                   }
                   className="scale-125"
@@ -400,7 +447,7 @@ export default function HoleTrackerPage() {
                 <div className="space-y-3">
                   <Select
                     value={penalty.type}
-                    onValueChange={(value) => 
+                    onValueChange={(value) =>
                       setPenalty({ ...penalty, type: value })
                     }
                   >
@@ -416,7 +463,7 @@ export default function HoleTrackerPage() {
                   </Select>
                   <Select
                     value={penalty.reason}
-                    onValueChange={(value) => 
+                    onValueChange={(value) =>
                       setPenalty({ ...penalty, reason: value })
                     }
                   >
@@ -446,7 +493,7 @@ export default function HoleTrackerPage() {
                 <Switch
                   id="wedge-range"
                   checked={wedgeRange.wasInWedgeRange}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setWedgeRange({ ...wedgeRange, wasInWedgeRange: checked })
                   }
                   className="scale-125"
@@ -463,7 +510,7 @@ export default function HoleTrackerPage() {
                         variant="outline"
                         size="sm"
                         className="h-10 w-10"
-                        onClick={() => 
+                        onClick={() =>
                           setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: Math.max(1, wedgeRange.shotsFromWedgeRange - 1) })
                         }
                       >
@@ -476,7 +523,7 @@ export default function HoleTrackerPage() {
                         variant="outline"
                         size="sm"
                         className="h-10 w-10"
-                        onClick={() => 
+                        onClick={() =>
                           setWedgeRange({ ...wedgeRange, shotsFromWedgeRange: wedgeRange.shotsFromWedgeRange + 1 })
                         }
                       >
@@ -489,12 +536,11 @@ export default function HoleTrackerPage() {
                       </Badge>
                     )}
                   </div>
-                  
-                  {/* Show reason dropdown only if shots > 3 */}
+
                   {wedgeRange.shotsFromWedgeRange > 3 && (
                     <Select
                       value={wedgeRange.reason}
-                      onValueChange={(value) => 
+                      onValueChange={(value) =>
                         setWedgeRange({ ...wedgeRange, reason: value })
                       }
                     >
@@ -528,7 +574,7 @@ export default function HoleTrackerPage() {
               <ChevronLeft className="mr-2 h-5 w-5" />
               Previous
             </Button>
-            
+
             <Button
               onClick={handleSaveAndNext}
               disabled={isSaving}
@@ -538,8 +584,7 @@ export default function HoleTrackerPage() {
               {holeNum < 18 && <ChevronRight className="ml-2 h-5 w-5" />}
             </Button>
           </div>
-          
-          {/* Save & Exit button */}
+
           <Button
             variant="secondary"
             onClick={handleSaveAndExit}
@@ -551,12 +596,9 @@ export default function HoleTrackerPage() {
           </Button>
         </div>
 
-        {/* Course name reminder */}
-        {round && (
-          <p className="text-center text-sm text-muted-foreground">
-            {round.courseName}
-          </p>
-        )}
+        <p className="text-center text-sm text-muted-foreground">
+          {round.courseName}
+        </p>
       </main>
     </div>
   );

@@ -7,6 +7,9 @@ const schema = defineSchema({
     userId: v.string(),        // Clerk user ID
     date: v.number(),          // Unix timestamp
     courseName: v.string(),
+    courseId: v.optional(v.string()),  // slug from lib/courses, if known
+    teeId: v.optional(v.string()),     // tee played from
+    teeName: v.optional(v.string()),   // human-readable tee name snapshot
     totalScore: v.optional(v.number()),
     totalPar: v.optional(v.number()),
     createdAt: v.number(),
