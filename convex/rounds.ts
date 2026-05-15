@@ -112,6 +112,33 @@ export const getRecentRounds = query({
   },
 });
 
+// Get the user's most-recent incomplete round (for "resume" UI).
+// Returns the round + its already-saved holes, or null if there's nothing
+// in progress.
+export const getIncompleteRound = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const round = await ctx.db
+      .query("rounds")
+      .withIndex("by_user_date", (q) => q.eq("userId", identity.subject))
+      .filter((q) => q.eq(q.field("isComplete"), false))
+      .order("desc")
+      .first();
+
+    if (!round) return null;
+
+    const holes = await ctx.db
+      .query("holes")
+      .withIndex("by_round", (q) => q.eq("roundId", round._id))
+      .order("asc")
+      .collect();
+
+    return { ...round, holes };
+  },
+});
+
 // Complete a round
 export const completeRound = mutation({
   args: {
