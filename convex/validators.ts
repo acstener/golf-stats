@@ -45,7 +45,7 @@ export const heroShotsAvoidedShape = v.object({
 export const trackingModeValidator = v.union(
   v.literal("score"),
   v.literal("six"),
-  v.literal("strokes-gained"),
+  v.literal("classic"),
 );
 
 // Full document validators (for return types of queries).
@@ -114,6 +114,10 @@ export const holeValidator = v.object({
   penalty: v.optional(penaltyShape),
   wedgeRange: v.optional(wedgeRangeShape),
   heroShotsAvoided: v.optional(heroShotsAvoidedShape),
+  fir: v.optional(v.boolean()),
+  gir: v.optional(v.boolean()),
+  putts: v.optional(v.number()),
+  driveDistance: v.optional(v.number()),
   createdAt: v.number(),
 });
 

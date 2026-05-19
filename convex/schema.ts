@@ -13,11 +13,11 @@ const schema = defineSchema({
     // What stat depth the user opted into for this round. Drives the hole
     // tracker UI + which data we collect. Absent = legacy round (treat as
     // "six" for backward compat).
-    //   "score":           par + strokes per hole only
-    //   "six":             score + the six per-hole stats (default)
-    //   "strokes-gained":  score + shot-by-shot lie/distance (in `shots`)
+    //   "score":    par + strokes per hole only
+    //   "six":      score + the six per-hole stats (default)
+    //   "classic":  score + FIR / GIR / putts / drive distance per hole
     trackingMode: v.optional(
-      v.union(v.literal("score"), v.literal("six"), v.literal("strokes-gained")),
+      v.union(v.literal("score"), v.literal("six"), v.literal("classic")),
     ),
     totalScore: v.optional(v.number()),
     totalPar: v.optional(v.number()),
@@ -72,7 +72,14 @@ const schema = defineSchema({
       occurred: v.boolean(),
       description: v.optional(v.string()), // What hero shot did you avoid?
     })),
-    
+
+    // Classic stats (populated when round.trackingMode === "classic").
+    // FIR is N/A on par 3, so undefined when not applicable / not entered.
+    fir: v.optional(v.boolean()),
+    gir: v.optional(v.boolean()),
+    putts: v.optional(v.number()),
+    driveDistance: v.optional(v.number()), // yards
+
     createdAt: v.number(),
   })
     .index("by_round", ["roundId"])

@@ -17,12 +17,18 @@ export const saveHole = mutation({
     holeNumber: v.number(),
     par: v.number(),
     strokes: v.number(),
+    // The Six
     outOfPosition: v.optional(outOfPositionShape),
     failedEasyUpDown: v.optional(failedEasyUpDownShape),
     threePutt: v.optional(threePuttShape),
     penalty: v.optional(penaltyShape),
     wedgeRange: v.optional(wedgeRangeShape),
     heroShotsAvoided: v.optional(heroShotsAvoidedShape),
+    // Classic Stats
+    fir: v.optional(v.boolean()),
+    gir: v.optional(v.boolean()),
+    putts: v.optional(v.number()),
+    driveDistance: v.optional(v.number()),
   },
   returns: v.id("holes"),
   handler: async (ctx, args) => {
@@ -68,6 +74,10 @@ export const saveHole = mutation({
       penalty: blank(args.penalty),
       wedgeRange: blank(args.wedgeRange),
       heroShotsAvoided: blank(args.heroShotsAvoided),
+      fir: args.fir,
+      gir: args.gir,
+      putts: args.putts,
+      driveDistance: args.driveDistance,
     };
 
     if (existingHole) {
