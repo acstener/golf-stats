@@ -212,3 +212,105 @@ export const getUserStats = query({
     };
   },
 });
+
+// Classic Stats: aggregates the four standard golf metrics — FIR %, GIR %,
+// avg putts, avg drive — across the user's completed classic-mode rounds.
+// Returns nulls for buckets with no eligible holes so the UI can render
+// "—" instead of NaN.
+export const getClassicStats = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      roundsPlayed: v.number(),
+      firPct: v.union(v.number(), v.null()),
+      girPct: v.union(v.number(), v.null()),
+      avgPutts: v.union(v.number(), v.null()),
+      avgDrive: v.union(v.number(), v.null()),
+      firDenominator: v.number(),
+      girDenominator: v.number(),
+      puttsDenominator: v.number(),
+      driveDenominator: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const rounds = await ctx.db
+      .query("rounds")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isComplete"), true),
+          q.eq(q.field("trackingMode"), "classic"),
+        ),
+      )
+      .collect();
+
+    if (rounds.length === 0) return null;
+
+    const allHoles = await Promise.all(
+      rounds.map((r) =>
+        ctx.db
+          .query("holes")
+          .withIndex("by_round", (q) => q.eq("roundId", r._id))
+          .collect(),
+      ),
+    );
+    const holes = allHoles.flat();
+
+    let firHits = 0;
+    let firDenominator = 0;
+    let girHits = 0;
+    let girDenominator = 0;
+    let puttsTotal = 0;
+    let puttsDenominator = 0;
+    let driveTotal = 0;
+    let driveDenominator = 0;
+
+    for (const h of holes) {
+      // FIR: only applicable on par 4+ where user actually answered.
+      if (h.par >= 4 && h.fir !== undefined) {
+        firDenominator++;
+        if (h.fir) firHits++;
+      }
+      if (h.gir !== undefined) {
+        girDenominator++;
+        if (h.gir) girHits++;
+      }
+      if (h.putts !== undefined) {
+        puttsDenominator++;
+        puttsTotal += h.putts;
+      }
+      if (h.par >= 4 && h.driveDistance !== undefined && h.driveDistance > 0) {
+        driveDenominator++;
+        driveTotal += h.driveDistance;
+      }
+    }
+
+    return {
+      roundsPlayed: rounds.length,
+      firPct:
+        firDenominator > 0
+          ? parseFloat(((firHits / firDenominator) * 100).toFixed(1))
+          : null,
+      girPct:
+        girDenominator > 0
+          ? parseFloat(((girHits / girDenominator) * 100).toFixed(1))
+          : null,
+      avgPutts:
+        puttsDenominator > 0
+          ? parseFloat((puttsTotal / puttsDenominator).toFixed(2))
+          : null,
+      avgDrive:
+        driveDenominator > 0
+          ? Math.round(driveTotal / driveDenominator)
+          : null,
+      firDenominator,
+      girDenominator,
+      puttsDenominator,
+      driveDenominator,
+    };
+  },
+});
