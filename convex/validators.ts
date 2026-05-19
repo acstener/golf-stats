@@ -40,6 +40,14 @@ export const heroShotsAvoidedShape = v.object({
   description: v.optional(v.string()),
 });
 
+// Tracking-mode union for rounds. Drives the hole tracker UI + which
+// per-round data the app captures.
+export const trackingModeValidator = v.union(
+  v.literal("score"),
+  v.literal("six"),
+  v.literal("strokes-gained"),
+);
+
 // Full document validators (for return types of queries).
 export const roundValidator = v.object({
   _id: v.id("rounds"),
@@ -50,11 +58,46 @@ export const roundValidator = v.object({
   courseId: v.optional(v.string()),
   teeId: v.optional(v.string()),
   teeName: v.optional(v.string()),
+  trackingMode: v.optional(trackingModeValidator),
   totalScore: v.optional(v.number()),
   totalPar: v.optional(v.number()),
   createdAt: v.number(),
   completedAt: v.optional(v.number()),
   isComplete: v.boolean(),
+});
+
+// Shot lie + result enums (kept aligned with schema).
+export const lieValidator = v.union(
+  v.literal("tee"),
+  v.literal("fairway"),
+  v.literal("rough"),
+  v.literal("sand"),
+  v.literal("recovery"),
+  v.literal("green"),
+  v.literal("penalty"),
+);
+export const resultLieValidator = v.union(
+  v.literal("fairway"),
+  v.literal("rough"),
+  v.literal("sand"),
+  v.literal("green"),
+  v.literal("hole"),
+  v.literal("penalty-water"),
+  v.literal("penalty-ob"),
+  v.literal("penalty-lost"),
+  v.literal("recovery"),
+);
+export const shotValidator = v.object({
+  _id: v.id("shots"),
+  _creationTime: v.number(),
+  roundId: v.id("rounds"),
+  holeNumber: v.number(),
+  shotNumber: v.number(),
+  lie: lieValidator,
+  distance: v.optional(v.number()),
+  result: v.optional(resultLieValidator),
+  club: v.optional(v.string()),
+  createdAt: v.number(),
 });
 
 export const holeValidator = v.object({
@@ -83,6 +126,7 @@ export const roundWithHolesValidator = v.object({
   courseId: v.optional(v.string()),
   teeId: v.optional(v.string()),
   teeName: v.optional(v.string()),
+  trackingMode: v.optional(trackingModeValidator),
   totalScore: v.optional(v.number()),
   totalPar: v.optional(v.number()),
   createdAt: v.number(),

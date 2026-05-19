@@ -10,6 +10,15 @@ const schema = defineSchema({
     courseId: v.optional(v.string()),  // slug from lib/courses, if known
     teeId: v.optional(v.string()),     // tee played from
     teeName: v.optional(v.string()),   // human-readable tee name snapshot
+    // What stat depth the user opted into for this round. Drives the hole
+    // tracker UI + which data we collect. Absent = legacy round (treat as
+    // "six" for backward compat).
+    //   "score":           par + strokes per hole only
+    //   "six":             score + the six per-hole stats (default)
+    //   "strokes-gained":  score + shot-by-shot lie/distance (in `shots`)
+    trackingMode: v.optional(
+      v.union(v.literal("score"), v.literal("six"), v.literal("strokes-gained")),
+    ),
     totalScore: v.optional(v.number()),
     totalPar: v.optional(v.number()),
     createdAt: v.number(),
@@ -69,6 +78,46 @@ const schema = defineSchema({
     .index("by_round", ["roundId"])
     .index("by_round_hole", ["roundId", "holeNumber"]),
   
+  // Shot-by-shot data (only populated when the round is in
+  // trackingMode = "strokes-gained"). Each shot records the lie it was
+  // played from + distance to the pin, enough to compute strokes gained
+  // against a benchmark table later.
+  shots: defineTable({
+    roundId: v.id("rounds"),
+    holeNumber: v.number(),
+    shotNumber: v.number(),
+    lie: v.union(
+      v.literal("tee"),
+      v.literal("fairway"),
+      v.literal("rough"),
+      v.literal("sand"),
+      v.literal("recovery"),
+      v.literal("green"),
+      v.literal("penalty"),
+    ),
+    // Yards from tee/fairway/rough/sand/recovery, feet from the green.
+    distance: v.optional(v.number()),
+    // Where the ball ended up. Used as the next shot's starting lie or as
+    // "hole" for the final stroke.
+    result: v.optional(
+      v.union(
+        v.literal("fairway"),
+        v.literal("rough"),
+        v.literal("sand"),
+        v.literal("green"),
+        v.literal("hole"),
+        v.literal("penalty-water"),
+        v.literal("penalty-ob"),
+        v.literal("penalty-lost"),
+        v.literal("recovery"),
+      ),
+    ),
+    club: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_round", ["roundId"])
+    .index("by_round_hole", ["roundId", "holeNumber"]),
+
   // Aggregated user statistics
   userStats: defineTable({
     userId: v.string(),

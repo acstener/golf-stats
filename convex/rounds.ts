@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { roundValidator, roundWithHolesValidator } from "./validators";
+import { roundValidator, roundWithHolesValidator, trackingModeValidator } from "./validators";
 
 export const createRound = mutation({
   args: {
@@ -8,6 +8,7 @@ export const createRound = mutation({
     courseId: v.optional(v.string()),
     teeId: v.optional(v.string()),
     teeName: v.optional(v.string()),
+    trackingMode: v.optional(trackingModeValidator),
   },
   returns: v.id("rounds"),
   handler: async (ctx, args) => {
@@ -25,6 +26,7 @@ export const createRound = mutation({
       courseId: args.courseId,
       teeId: args.teeId,
       teeName: args.teeName,
+      trackingMode: args.trackingMode ?? "six",
       date: Date.now(),
       createdAt: Date.now(),
       isComplete: false,
