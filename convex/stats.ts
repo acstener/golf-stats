@@ -1,8 +1,27 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 
+const statBreakdownValidator = v.object({
+  outOfPosition: v.number(),
+  failedEasyUpDown: v.number(),
+  doubleBogeyOrWorse: v.number(),
+  threePutt: v.number(),
+  penalty: v.number(),
+  wedgeRangeOverPar: v.number(),
+});
+
 // Get user's biggest problem
 export const getBiggestProblem = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      problem: v.string(),
+      avgPerRound: v.number(),
+      total: v.number(),
+      roundsAnalyzed: v.number(),
+    }),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -95,6 +114,15 @@ export const getBiggestProblem = query({
 
 // Get aggregated stats
 export const getUserStats = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      roundsPlayed: v.number(),
+      averageScore: v.number(),
+      stats: statBreakdownValidator,
+    }),
+  ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;

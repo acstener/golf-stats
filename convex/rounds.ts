@@ -1,8 +1,7 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Doc } from "./_generated/dataModel";
+import { roundValidator, roundWithHolesValidator } from "./validators";
 
-// Create a new round
 export const createRound = mutation({
   args: {
     courseName: v.string(),
@@ -10,9 +9,15 @@ export const createRound = mutation({
     teeId: v.optional(v.string()),
     teeName: v.optional(v.string()),
   },
+  returns: v.id("rounds"),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHENTICATED",
+        message: "Must be signed in to create a round.",
+      });
+    }
 
     const roundId = await ctx.db.insert("rounds", {
       userId: identity.subject,
@@ -29,34 +34,25 @@ export const createRound = mutation({
   },
 });
 
-// Get all rounds for the current user
 export const getRounds = query({
-  args: {
-    limit: v.optional(v.number()),
-  },
+  args: { limit: v.optional(v.number()) },
+  returns: v.array(roundValidator),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
-    const limit = args.limit || 10;
-    
-    const rounds = await ctx.db
+    const limit = args.limit ?? 10;
+    return await ctx.db
       .query("rounds")
-      .withIndex("by_user_date", (q) => 
-        q.eq("userId", identity.subject)
-      )
+      .withIndex("by_user_date", (q) => q.eq("userId", identity.subject))
       .order("desc")
       .take(limit);
-
-    return rounds;
   },
 });
 
-// Get a single round with its holes
 export const getRound = query({
-  args: {
-    roundId: v.id("rounds"),
-  },
+  args: { roundId: v.id("rounds") },
+  returns: v.union(v.null(), roundWithHolesValidator),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -70,52 +66,44 @@ export const getRound = query({
       .order("asc")
       .collect();
 
-    return {
-      ...round,
-      holes,
-    };
+    return { ...round, holes };
   },
 });
 
-// Get recent rounds for dashboard
 export const getRecentRounds = query({
-  args: {
-    count: v.optional(v.number()),
-  },
+  args: { count: v.optional(v.number()) },
+  returns: v.object({
+    rounds: v.array(roundValidator),
+    averageScore: v.number(),
+  }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return { rounds: [], averageScore: 0 };
 
-    const count = args.count || 5;
-    
+    const count = args.count ?? 5;
+
     const rounds = await ctx.db
       .query("rounds")
-      .withIndex("by_user_date", (q) => 
-        q.eq("userId", identity.subject)
-      )
+      .withIndex("by_user_date", (q) => q.eq("userId", identity.subject))
       .filter((q) => q.eq(q.field("isComplete"), true))
       .order("desc")
       .take(count);
 
     const scores = rounds
-      .filter(r => r.totalScore !== undefined)
-      .map(r => r.totalScore!);
-    
-    const averageScore = scores.length > 0 
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : 0;
+      .filter((r) => r.totalScore !== undefined)
+      .map((r) => r.totalScore!);
 
-    return {
-      rounds,
-      averageScore,
-    };
+    const averageScore =
+      scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+    return { rounds, averageScore };
   },
 });
 
-// Get the user's most-recent incomplete round (for "resume" UI).
-// Returns the round + its already-saved holes, or null if there's nothing
-// in progress.
+// Most-recent in-progress round (for the "Resume" card on Track screen).
 export const getIncompleteRound = query({
+  args: {},
+  returns: v.union(v.null(), roundWithHolesValidator),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -139,21 +127,33 @@ export const getIncompleteRound = query({
   },
 });
 
-// Complete a round
 export const completeRound = mutation({
   args: {
     roundId: v.id("rounds"),
     totalScore: v.number(),
     totalPar: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHENTICATED",
+        message: "Must be signed in.",
+      });
+    }
 
     const round = await ctx.db.get(args.roundId);
     if (!round || round.userId !== identity.subject) {
-      throw new Error("Round not found or unauthorized");
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Round not found.",
+      });
     }
+
+    // Idempotent: bail out cleanly if already finalised so a repeated effect
+    // (e.g. summary screen mounting twice) doesn't double-write.
+    if (round.isComplete) return null;
 
     await ctx.db.patch(args.roundId, {
       totalScore: args.totalScore,
@@ -162,37 +162,38 @@ export const completeRound = mutation({
       isComplete: true,
     });
 
-    return { success: true };
+    return null;
   },
 });
 
-// Delete a round
 export const deleteRound = mutation({
-  args: {
-    roundId: v.id("rounds"),
-  },
+  args: { roundId: v.id("rounds") },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) {
+      throw new ConvexError({
+        code: "UNAUTHENTICATED",
+        message: "Must be signed in.",
+      });
+    }
 
     const round = await ctx.db.get(args.roundId);
     if (!round || round.userId !== identity.subject) {
-      throw new Error("Round not found or unauthorized");
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Round not found.",
+      });
     }
 
-    // Delete all holes for this round
     const holes = await ctx.db
       .query("holes")
       .withIndex("by_round", (q) => q.eq("roundId", args.roundId))
       .collect();
 
-    for (const hole of holes) {
-      await ctx.db.delete(hole._id);
-    }
-
-    // Delete the round
+    await Promise.all(holes.map((h) => ctx.db.delete(h._id)));
     await ctx.db.delete(args.roundId);
 
-    return { success: true };
+    return null;
   },
 });
