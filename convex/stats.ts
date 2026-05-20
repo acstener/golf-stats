@@ -314,3 +314,129 @@ export const getClassicStats = query({
     };
   },
 });
+// Last N completed rounds with score, par, course + per-round stat counts.
+// Drives the score-trend bars and per-stat sparkline on the Stats screen.
+export const getScoreTrend = query({
+  args: { limit: v.optional(v.number()) },
+  returns: v.array(
+    v.object({
+      _id: v.id("rounds"),
+      date: v.number(),
+      courseName: v.string(),
+      courseId: v.optional(v.string()),
+      score: v.number(),
+      par: v.number(),
+      statCounts: v.object({
+        outOfPosition: v.number(),
+        failedEasyUpDown: v.number(),
+        threePutt: v.number(),
+        penalty: v.number(),
+        doubleBogeyOrWorse: v.number(),
+        heroShotsAvoided: v.number(),
+        wedgeRangeOverPar: v.number(),
+      }),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const limit = args.limit ?? 10;
+
+    const rounds = await ctx.db
+      .query("rounds")
+      .withIndex("by_user_date", (q) => q.eq("userId", identity.subject))
+      .filter((q) => q.eq(q.field("isComplete"), true))
+      .order("desc")
+      .take(limit);
+
+    return await Promise.all(
+      rounds.map(async (r) => {
+        const holes = await ctx.db
+          .query("holes")
+          .withIndex("by_round", (q) => q.eq("roundId", r._id))
+          .collect();
+
+        const score = r.totalScore ?? holes.reduce((a, h) => a + h.strokes, 0);
+        const par = r.totalPar ?? holes.reduce((a, h) => a + h.par, 0);
+
+        return {
+          _id: r._id,
+          date: r.date,
+          courseName: r.courseName,
+          courseId: r.courseId,
+          score,
+          par,
+          statCounts: {
+            outOfPosition: holes.filter((h) => h.outOfPosition?.occurred).length,
+            failedEasyUpDown: holes.filter((h) => h.failedEasyUpDown?.occurred).length,
+            threePutt: holes.filter((h) => h.threePutt?.occurred).length,
+            penalty: holes.filter((h) => h.penalty?.occurred).length,
+            doubleBogeyOrWorse: holes.filter((h) => h.doubleBogeyOrWorse?.occurred).length,
+            heroShotsAvoided: holes.filter((h) => h.heroShotsAvoided?.occurred).length,
+            wedgeRangeOverPar: holes.filter(
+              (h) =>
+                h.wedgeRange?.wasInWedgeRange &&
+                (h.wedgeRange.shotsFromWedgeRange ?? 0) > 3,
+            ).length,
+          },
+        };
+      }),
+    );
+  },
+});
+
+// Per-course averages — counts and avg score grouped by courseName. Lets the
+// user see "I shoot 4 better at Dyke" at a glance.
+export const getCourseAverages = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      courseName: v.string(),
+      courseId: v.optional(v.string()),
+      roundsPlayed: v.number(),
+      averageScore: v.number(),
+      bestScore: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const rounds = await ctx.db
+      .query("rounds")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .filter((q) => q.eq(q.field("isComplete"), true))
+      .collect();
+
+    const byCourse = new Map<
+      string,
+      { courseId?: string; scores: number[] }
+    >();
+    for (const r of rounds) {
+      if (r.totalScore == null) continue;
+      const existing = byCourse.get(r.courseName) ?? {
+        courseId: r.courseId,
+        scores: [],
+      };
+      existing.scores.push(r.totalScore);
+      byCourse.set(r.courseName, existing);
+    }
+
+    const result = [];
+    for (const [courseName, { courseId, scores }] of byCourse) {
+      if (scores.length === 0) continue;
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      result.push({
+        courseName,
+        courseId,
+        roundsPlayed: scores.length,
+        averageScore: Math.round(avg * 10) / 10,
+        bestScore: Math.min(...scores),
+      });
+    }
+    // Most-played first.
+    result.sort((a, b) => b.roundsPlayed - a.roundsPlayed);
+    return result;
+  },
+});
