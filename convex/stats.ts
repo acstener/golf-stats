@@ -440,3 +440,274 @@ export const getCourseAverages = query({
     return result;
   },
 });
+
+// Hard-hitting insights — the actual "so what" of all this tracked data.
+// Computes the metrics a golfer would actually want surfaced as one-liners:
+// front-vs-back, par-type strengths, stat costs (using observed avg diff vs
+// non-stat holes), trajectory, problem hole. Client formats into cards.
+export const getInsights = query({
+  args: {},
+  returns: v.union(
+    v.null(),
+    v.object({
+      sampleSize: v.number(),
+      avgScore: v.number(),
+      // Average score-to-par on the front nine vs back nine.
+      frontVsBack: v.object({
+        front9: v.number(),
+        back9: v.number(),
+        diff: v.number(), // back - front, positive = back is worse
+      }),
+      // Per-par-type average strokes vs par.
+      parTypes: v.object({
+        par3: v.union(v.null(), v.number()),
+        par4: v.union(v.null(), v.number()),
+        par5: v.union(v.null(), v.number()),
+      }),
+      // Top-3 "problem holes" by avg strokes-over-par. Hole numbers that
+      // bite this golfer most.
+      problemHoles: v.array(
+        v.object({
+          holeNumber: v.number(),
+          timesPlayed: v.number(),
+          avgVsPar: v.number(),
+          bogeyOrWorsePct: v.number(), // 0..1
+        }),
+      ),
+      // For each of The Six stats: avg strokes-over-par on holes WHERE the
+      // stat occurred vs holes WHERE it didn't. The difference is the
+      // empirical "cost per occurrence" of that stat.
+      statCost: v.array(
+        v.object({
+          stat: v.string(),
+          label: v.string(),
+          occurrences: v.number(), // total across sample
+          perRound: v.number(),
+          avgWithStat: v.union(v.null(), v.number()),
+          avgWithoutStat: v.union(v.null(), v.number()),
+          extraStrokesPerOccurrence: v.union(v.null(), v.number()), // with - without
+          impactPerRound: v.union(v.null(), v.number()), // per-round stroke impact
+        }),
+      ),
+      // Recent half vs earlier half — improving or going backwards?
+      trajectory: v.object({
+        recentAvg: v.union(v.null(), v.number()),
+        earlierAvg: v.union(v.null(), v.number()),
+        diff: v.union(v.null(), v.number()), // recent - earlier; negative = improving
+      }),
+      // Best round, for celebration / context.
+      bestRound: v.union(
+        v.null(),
+        v.object({
+          score: v.number(),
+          par: v.number(),
+          courseName: v.string(),
+          date: v.number(),
+        }),
+      ),
+    }),
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const rounds = await ctx.db
+      .query("rounds")
+      .withIndex("by_user_date", (q) => q.eq("userId", identity.subject))
+      .filter((q) => q.eq(q.field("isComplete"), true))
+      .order("desc")
+      .take(20); // sample size cap
+
+    if (rounds.length === 0) return null;
+
+    const allHoles = (
+      await Promise.all(
+        rounds.map((r) =>
+          ctx.db
+            .query("holes")
+            .withIndex("by_round", (q) => q.eq("roundId", r._id))
+            .collect(),
+        ),
+      )
+    ).flat();
+
+    if (allHoles.length === 0) return null;
+
+    // --- Front vs back ---
+    const front = allHoles.filter((h) => h.holeNumber <= 9);
+    const back = allHoles.filter((h) => h.holeNumber > 9);
+    const avgDiff = (xs: typeof allHoles) =>
+      xs.length === 0
+        ? 0
+        : xs.reduce((acc, h) => acc + (h.strokes - h.par), 0) / xs.length;
+    const front9 = avgDiff(front);
+    const back9 = avgDiff(back);
+
+    // --- Par types ---
+    const par3 = allHoles.filter((h) => h.par === 3);
+    const par4 = allHoles.filter((h) => h.par === 4);
+    const par5 = allHoles.filter((h) => h.par === 5);
+
+    // --- Problem holes ---
+    const byHole = new Map<
+      number,
+      { played: number; diffSum: number; bogeyOrWorse: number }
+    >();
+    for (const h of allHoles) {
+      const entry =
+        byHole.get(h.holeNumber) ?? { played: 0, diffSum: 0, bogeyOrWorse: 0 };
+      entry.played += 1;
+      entry.diffSum += h.strokes - h.par;
+      if (h.strokes >= h.par + 1) entry.bogeyOrWorse += 1;
+      byHole.set(h.holeNumber, entry);
+    }
+    const problemHoles = Array.from(byHole.entries())
+      .filter(([, v]) => v.played >= 2) // need at least 2 plays to count
+      .map(([holeNumber, v]) => ({
+        holeNumber,
+        timesPlayed: v.played,
+        avgVsPar: Math.round((v.diffSum / v.played) * 100) / 100,
+        bogeyOrWorsePct: v.bogeyOrWorse / v.played,
+      }))
+      .sort((a, b) => b.avgVsPar - a.avgVsPar)
+      .slice(0, 3);
+
+    // --- Per-stat cost ---
+    type StatKey =
+      | "outOfPosition"
+      | "failedEasyUpDown"
+      | "threePutt"
+      | "penalty"
+      | "wedgeRangeOverPar"
+      | "heroShotsAvoided";
+    const STATS: { key: StatKey; label: string; match: (h: (typeof allHoles)[number]) => boolean }[] = [
+      {
+        key: "outOfPosition",
+        label: "Out of position",
+        match: (h) => !!h.outOfPosition?.occurred,
+      },
+      {
+        key: "failedEasyUpDown",
+        label: "Failed up & down",
+        match: (h) => !!h.failedEasyUpDown?.occurred,
+      },
+      {
+        key: "threePutt",
+        label: "Three putt",
+        match: (h) => !!h.threePutt?.occurred,
+      },
+      {
+        key: "penalty",
+        label: "Penalty stroke",
+        match: (h) => !!h.penalty?.occurred,
+      },
+      {
+        key: "wedgeRangeOverPar",
+        label: "Wedge range over par",
+        match: (h) =>
+          !!h.wedgeRange?.wasInWedgeRange &&
+          (h.wedgeRange.shotsFromWedgeRange ?? 0) > 3,
+      },
+      {
+        key: "heroShotsAvoided",
+        label: "Hero shot avoided",
+        match: (h) => !!h.heroShotsAvoided?.occurred,
+      },
+    ];
+
+    const statCost = STATS.map(({ key, label, match }) => {
+      const withStat = allHoles.filter(match);
+      const withoutStat = allHoles.filter((h) => !match(h));
+      const avgWith =
+        withStat.length === 0
+          ? null
+          : Math.round((avgDiff(withStat) * 100)) / 100;
+      const avgWithout =
+        withoutStat.length === 0
+          ? null
+          : Math.round((avgDiff(withoutStat) * 100)) / 100;
+      const extra =
+        avgWith === null || avgWithout === null
+          ? null
+          : Math.round((avgWith - avgWithout) * 100) / 100;
+      const perRound =
+        Math.round((withStat.length / rounds.length) * 100) / 100;
+      const impact =
+        extra === null ? null : Math.round(extra * perRound * 100) / 100;
+      return {
+        stat: key,
+        label,
+        occurrences: withStat.length,
+        perRound,
+        avgWithStat: avgWith,
+        avgWithoutStat: avgWithout,
+        extraStrokesPerOccurrence: extra,
+        impactPerRound: impact,
+      };
+    }).sort((a, b) => (b.impactPerRound ?? 0) - (a.impactPerRound ?? 0));
+
+    // --- Trajectory ---
+    const scoredRounds = rounds.filter((r) => r.totalScore != null) as Array<
+      (typeof rounds)[number] & { totalScore: number }
+    >;
+    const half = Math.floor(scoredRounds.length / 2);
+    let trajectory = {
+      recentAvg: null as number | null,
+      earlierAvg: null as number | null,
+      diff: null as number | null,
+    };
+    if (half >= 1 && scoredRounds.length >= 2) {
+      // rounds[] is desc — newest first.
+      const recent = scoredRounds.slice(0, half);
+      const earlier = scoredRounds.slice(half);
+      const r = recent.reduce((a, b) => a + b.totalScore, 0) / recent.length;
+      const e = earlier.reduce((a, b) => a + b.totalScore, 0) / earlier.length;
+      trajectory = {
+        recentAvg: Math.round(r * 10) / 10,
+        earlierAvg: Math.round(e * 10) / 10,
+        diff: Math.round((r - e) * 10) / 10,
+      };
+    }
+
+    // --- Best round ---
+    const bestRound = (() => {
+      if (scoredRounds.length === 0) return null;
+      const sorted = [...scoredRounds].sort((a, b) => a.totalScore - b.totalScore);
+      const top = sorted[0];
+      return {
+        score: top.totalScore,
+        par: top.totalPar ?? 0,
+        courseName: top.courseName,
+        date: top.date,
+      };
+    })();
+
+    const overallAvg =
+      scoredRounds.length === 0
+        ? 0
+        : Math.round(
+            (scoredRounds.reduce((a, b) => a + b.totalScore, 0) /
+              scoredRounds.length) *
+              10,
+          ) / 10;
+
+    return {
+      sampleSize: rounds.length,
+      avgScore: overallAvg,
+      frontVsBack: {
+        front9: Math.round(front9 * 100) / 100,
+        back9: Math.round(back9 * 100) / 100,
+        diff: Math.round((back9 - front9) * 100) / 100,
+      },
+      parTypes: {
+        par3: par3.length === 0 ? null : Math.round(avgDiff(par3) * 100) / 100,
+        par4: par4.length === 0 ? null : Math.round(avgDiff(par4) * 100) / 100,
+        par5: par5.length === 0 ? null : Math.round(avgDiff(par5) * 100) / 100,
+      },
+      problemHoles,
+      statCost,
+      trajectory,
+      bestRound,
+    };
+  },
+});
