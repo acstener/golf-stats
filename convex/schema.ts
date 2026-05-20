@@ -19,6 +19,14 @@ const schema = defineSchema({
     trackingMode: v.optional(
       v.union(v.literal("score"), v.literal("six"), v.literal("classic")),
     ),
+    // Which 9 holes the player is tracking. Absent = legacy round (treat
+    // as "full" for backward compat).
+    //   "full":  all 18 holes
+    //   "front": holes 1–9 only
+    //   "back":  holes 10–18 only
+    nineMode: v.optional(
+      v.union(v.literal("full"), v.literal("front"), v.literal("back")),
+    ),
     totalScore: v.optional(v.number()),
     totalPar: v.optional(v.number()),
     // Frozen at round-creation time. Lets us recompute Stableford even if

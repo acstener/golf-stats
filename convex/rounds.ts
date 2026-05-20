@@ -1,6 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { roundValidator, roundWithHolesValidator, trackingModeValidator } from "./validators";
+import {
+  nineModeValidator,
+  roundValidator,
+  roundWithHolesValidator,
+  trackingModeValidator,
+} from "./validators";
 
 export const createRound = mutation({
   args: {
@@ -9,6 +14,7 @@ export const createRound = mutation({
     teeId: v.optional(v.string()),
     teeName: v.optional(v.string()),
     trackingMode: v.optional(trackingModeValidator),
+    nineMode: v.optional(nineModeValidator),
     // All three snapshotted at round-creation so Stableford is stable
     // even if HI or course data changes later. Optional so old paths
     // (custom course, no profile yet) still work.
@@ -33,6 +39,7 @@ export const createRound = mutation({
       teeId: args.teeId,
       teeName: args.teeName,
       trackingMode: args.trackingMode ?? "six",
+      nineMode: args.nineMode ?? "full",
       handicapIndex: args.handicapIndex,
       courseHandicap: args.courseHandicap,
       playingHandicap: args.playingHandicap,

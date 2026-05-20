@@ -48,6 +48,13 @@ export const trackingModeValidator = v.union(
   v.literal("classic"),
 );
 
+// Which 9 the player is tracking (or full 18).
+export const nineModeValidator = v.union(
+  v.literal("full"),
+  v.literal("front"),
+  v.literal("back"),
+);
+
 // Full document validators (for return types of queries).
 export const roundValidator = v.object({
   _id: v.id("rounds"),
@@ -59,6 +66,7 @@ export const roundValidator = v.object({
   teeId: v.optional(v.string()),
   teeName: v.optional(v.string()),
   trackingMode: v.optional(trackingModeValidator),
+  nineMode: v.optional(nineModeValidator),
   totalScore: v.optional(v.number()),
   totalPar: v.optional(v.number()),
   handicapIndex: v.optional(v.number()),
@@ -134,6 +142,7 @@ export const roundWithHolesValidator = v.object({
   teeId: v.optional(v.string()),
   teeName: v.optional(v.string()),
   trackingMode: v.optional(trackingModeValidator),
+  nineMode: v.optional(nineModeValidator),
   totalScore: v.optional(v.number()),
   totalPar: v.optional(v.number()),
   handicapIndex: v.optional(v.number()),
