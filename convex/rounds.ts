@@ -9,6 +9,12 @@ export const createRound = mutation({
     teeId: v.optional(v.string()),
     teeName: v.optional(v.string()),
     trackingMode: v.optional(trackingModeValidator),
+    // All three snapshotted at round-creation so Stableford is stable
+    // even if HI or course data changes later. Optional so old paths
+    // (custom course, no profile yet) still work.
+    handicapIndex: v.optional(v.number()),
+    courseHandicap: v.optional(v.number()),
+    playingHandicap: v.optional(v.number()),
   },
   returns: v.id("rounds"),
   handler: async (ctx, args) => {
@@ -27,6 +33,9 @@ export const createRound = mutation({
       teeId: args.teeId,
       teeName: args.teeName,
       trackingMode: args.trackingMode ?? "six",
+      handicapIndex: args.handicapIndex,
+      courseHandicap: args.courseHandicap,
+      playingHandicap: args.playingHandicap,
       date: Date.now(),
       createdAt: Date.now(),
       isComplete: false,

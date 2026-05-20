@@ -11,8 +11,10 @@
 import type * as holes from "../holes.js";
 import type * as migration from "../migration.js";
 import type * as rounds from "../rounds.js";
+import type * as seed from "../seed.js";
 import type * as shots from "../shots.js";
 import type * as stats from "../stats.js";
+import type * as users from "../users.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -25,8 +27,10 @@ declare const fullApi: ApiFromModules<{
   holes: typeof holes;
   migration: typeof migration;
   rounds: typeof rounds;
+  seed: typeof seed;
   shots: typeof shots;
   stats: typeof stats;
+  users: typeof users;
   validators: typeof validators;
 }>;
 

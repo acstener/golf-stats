@@ -21,12 +21,33 @@ const schema = defineSchema({
     ),
     totalScore: v.optional(v.number()),
     totalPar: v.optional(v.number()),
+    // Frozen at round-creation time. Lets us recompute Stableford even if
+    // the user later edits their handicap index or the tee/course data
+    // changes. Calculated client-side from courseHandicap × 0.95
+    // (Stableford allowance), so we only need to store the final integer
+    // strokes-received-per-round value.
+    playingHandicap: v.optional(v.number()),
+    // Per-tee playing handicap context, snapshotted so we can show how
+    // we got the number ("8.6 → 11 CH → 10 PH at White (CR 72.9, S 134)").
+    handicapIndex: v.optional(v.number()),
+    courseHandicap: v.optional(v.number()),
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
     isComplete: v.boolean(),
   })
     .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "date"]),
+
+  // Player profile — one row per Clerk user. Stores handicap and any
+  // future preferences. Keyed by userId (Clerk subject).
+  userProfiles: defineTable({
+    userId: v.string(),
+    // WHS Handicap Index — e.g. 8.6 means single-digit handicap.
+    // Range typically [-5.0, 54.0]. Stored as the raw decimal, NOT
+    // multiplied — we convert to course/playing handicap per round.
+    handicapIndex: v.optional(v.number()),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
   
   // Individual holes table
   holes: defineTable({
